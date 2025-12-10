@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Den Haag 3D Projection Map</title>
+    <!-- ArcGIS Maps SDK for JavaScript 4.x -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.31/esri/themes/dark/main.css">
+    <script src="https://js.arcgis.com/4.31/"></script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            background: #020617;
+            overflow: hidden;
+        }
+        #viewDiv {
+            position: absolute;
+            inset: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- ArcGIS Map View Container -->
+    <div id="viewDiv"></div>
+
+    <script>
+        require([
+            "esri/WebMap",
+            "esri/views/MapView"
+        ], function(WebMap, MapView) {
+            
+            // ============================================
+            // Initialize ArcGIS WebMap
+            // ============================================
+            
+            // Load the webmap using the portal item ID
+            const map = new WebMap({
+                portalItem: {
+                    id: "49e3c991aa71437595e52f9b68ce5d1d"
+                }
+            });
+
+            // Create the map view
+            const view = new MapView({
+                container: "viewDiv",
+                map: map,
+                // Center on The Hague
+                center: [4.30, 52.08],
+                zoom: 12
+            });
+
+            // ============================================
+            // Layer Mapping: Store references to ArcGIS layers
+            // ============================================
+            
+            // Dictionary to store layer references by layerKey
+            // This maps the layerKey sent from index.html to the actual ArcGIS layer object
+            const layerMap = {};
+
+            // Wait for the map to load, then find and store layer references
+            map.when(() => {
+                console.log("ArcGIS WebMap loaded successfully");
+
+                // Find each relevant layer by its title and store in layerMap
+                // These layerKeys match what index.html will send in postMessage
+                const bomenLayer = map.allLayers.find(l => l.title === "Bomen");
+                const heatLayer = map.allLayers.find(l => l.title === "Hittestress");
+                const ovLayer = map.allLayers.find(l => l.title === "Openbaar Vervoer Nederland");
+                const trafficLayer = map.allLayers.find(l => l.title === "Traffic");
+                const noiseLayer = map.allLayers.find(l => l.title === "Noise pollution");
+                const popDensityLayer = map.allLayers.find(l => l.title === "The Hague population density");
+
+                // Store layers in the dictionary using the layerKeys that index.html will use
+                if (bomenLayer) {
+                    layerMap.bomen = bomenLayer;
+                    console.log("Found layer: Bomen");
+                } else {
+                    console.warn("Layer 'Bomen' not found in webmap");
+                }
+
+                if (heatLayer) {
+                    layerMap.heat = heatLayer;
+                    console.log("Found layer: Hittestress");
+                } else {
+                    console.warn("Layer 'Hittestress' not found in webmap");
+                }
+
+                if (ovLayer) {
+                    layerMap.ov = ovLayer;
+                    console.log("Found layer: Openbaar Vervoer Nederland");
+                } else {
+                    console.warn("Layer 'Openbaar Vervoer Nederland' not found in webmap");
+                }
+
+                if (trafficLayer) {
+                    layerMap.traffic = trafficLayer;
+                    console.log("Found layer: Traffic");
+                } else {
+                    console.warn("Layer 'Traffic' not found in webmap");
+                }
+
+                if (noiseLayer) {
+                    layerMap.noise = noiseLayer;
+                    console.log("Found layer: Noise pollution");
+                } else {
+                    console.warn("Layer 'Noise pollution' not found in webmap");
+                }
+
+                if (popDensityLayer) {
+                    layerMap.popdensity = popDensityLayer;
+                    console.log("Found layer: The Hague population density");
+                } else {
+                    console.warn("Layer 'The Hague population density' not found in webmap");
+                }
+
+                // Log all available layers for debugging
+                console.log("All layers in webmap:");
+                map.allLayers.forEach(layer => {
+                    console.log(`  - "${layer.title}" (type: ${layer.type})`);
+                });
+
+                // Initially set all mapped layers to invisible
+                Object.values(layerMap).forEach(layer => {
+                    if (layer) {
+                        layer.visible = false;
+                    }
+                });
+
+                // ============================================
+                // Message Handler: Listen for TOGGLE_LAYER messages from index.html
+                // ============================================
+                
+                window.addEventListener("message", function(event) {
+                    const data = event.data;
+                    
+                    // Only process TOGGLE_LAYER messages
+                    if (!data || data.type !== "TOGGLE_LAYER") {
+                        return;
+                    }
+
+                    const { layerKey, visible } = data;
+                    
+                    console.log(`Received TOGGLE_LAYER message: layerKey="${layerKey}", visible=${visible}`);
+
+                    // Look up the layer in our layerMap
+                    const layer = layerMap[layerKey];
+                    
+                    if (layer) {
+                        // Set the layer visibility
+                        layer.visible = visible;
+                        console.log(`Layer "${layer.title}" (key: ${layerKey}) visibility set to ${visible}`);
+                    } else {
+                        console.warn(`Layer key "${layerKey}" not found in layerMap. Available keys:`, Object.keys(layerMap));
+                    }
+                });
+
+                // Notify the parent window that the projection map is ready
+                if (window.opener) {
+                    window.opener.postMessage({ type: "projectionMapReady" }, "*");
+                    console.log("Notified parent window that projection map is ready");
+                }
+            });
+
+            // Wait for the view to load
+            view.when(() => {
+                console.log("ArcGIS MapView ready");
+            }).catch(function(error) {
+                console.error("Error loading MapView:", error);
+            });
+        });
+    </script>
+</body>
+</html>
+
