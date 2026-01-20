@@ -64,16 +64,84 @@
             map.when(() => {
                 console.log("ArcGIS WebMap loaded successfully");
 
+                // ============================================
+                // DEBUG: Log all layers and sublayers
+                // ============================================
+                console.log("=== ALL LAYERS DEBUG ===");
+                console.log("ALL LAYERS:", map.allLayers.toArray().map(l => ({
+                    title: l.title,
+                    id: l.id,
+                    type: l.type,
+                    visible: l.visible
+                })));
+
+                // Check for sublayers in group layers and MapImageLayers
+                map.allLayers.forEach(l => {
+                    if (l.sublayers) {
+                        console.log(`SUBLAYERS of "${l.title}" (${l.type}):`, l.sublayers.toArray().map(s => ({
+                            title: s.title,
+                            id: s.id,
+                            visible: s.visible
+                        })));
+                    }
+                    // Some layers might have layers property instead
+                    if (l.layers && l.layers.length > 0) {
+                        console.log(`LAYERS in "${l.title}" (${l.type}):`, l.layers.toArray().map(s => ({
+                            title: s.title,
+                            id: s.id,
+                            visible: s.visible
+                        })));
+                    }
+                });
+                console.log("=== END DEBUG ===");
+
                 // Find each relevant layer by its title and store in layerMap
                 // These layerKeys match what index.html will send in postMessage
                 const bomenLayer = map.allLayers.find(l => l.title === "Bomen");
                 const heatLayer = map.allLayers.find(l => l.title === "Hittestress");
                 const ovLayer = map.allLayers.find(l => l.title === "Openbaar Vervoer Nederland");
                 const trafficLayer = map.allLayers.find(l => l.title === "Traffic");
+                const constructionLayer = map.allLayers.find(l => l.title === "Construction");
                 const noiseLayer = map.allLayers.find(l => l.title === "Noise pollution");
                 const popDensityLayer = map.allLayers.find(l => l.title === "The Hague population density");
 
+                // Find Traffic & Road Closures layer - check both top-level and sublayers
+                let trafficRoadClosuresLayer = map.allLayers.find(l => l.title === "Traffic & Road Closures");
+                
+                // If not found at top level, search in sublayers
+                if (!trafficRoadClosuresLayer) {
+                    // Search through all layers that have sublayers
+                    for (const layer of map.allLayers.toArray()) {
+                        if (layer.sublayers) {
+                            const sublayer = layer.sublayers.find(s => 
+                                s.title === "Traffic & Road Closures" || 
+                                s.title.includes("Traffic") && s.title.includes("Road")
+                            );
+                            if (sublayer) {
+                                trafficRoadClosuresLayer = sublayer;
+                                console.log(`Found Traffic & Road Closures as sublayer in "${layer.title}"`);
+                                break;
+                            }
+                        }
+                        // Also check layers property
+                        if (layer.layers && layer.layers.length > 0) {
+                            const sublayer = layer.layers.find(s => 
+                                s.title === "Traffic & Road Closures" || 
+                                s.title.includes("Traffic") && s.title.includes("Road")
+                            );
+                            if (sublayer) {
+                                trafficRoadClosuresLayer = sublayer;
+                                console.log(`Found Traffic & Road Closures as layer in "${layer.title}"`);
+                                break;
+                            }
+                        }
+                    }
+                }
+
                 // Store layers in the dictionary using the layerKeys that index.html will use
+                // Mapping: website toggle → ArcGIS layer
+                
+                // Green Spaces & Trees → Bomen
                 if (bomenLayer) {
                     layerMap.bomen = bomenLayer;
                     console.log("Found layer: Bomen");
@@ -81,6 +149,7 @@
                     console.warn("Layer 'Bomen' not found in webmap");
                 }
 
+                // Heat Stress → Hittestress
                 if (heatLayer) {
                     layerMap.heat = heatLayer;
                     console.log("Found layer: Hittestress");
@@ -88,6 +157,7 @@
                     console.warn("Layer 'Hittestress' not found in webmap");
                 }
 
+                // Public Transport Network → Openbaar Vervoer Nederland
                 if (ovLayer) {
                     layerMap.ov = ovLayer;
                     console.log("Found layer: Openbaar Vervoer Nederland");
@@ -95,13 +165,46 @@
                     console.warn("Layer 'Openbaar Vervoer Nederland' not found in webmap");
                 }
 
-                if (trafficLayer) {
-                    layerMap.traffic = trafficLayer;
-                    console.log("Found layer: Traffic");
+                // Traffic Congestion & Dangerous Spots → Traffic & Road Closures
+                // This layer may be a top-level layer or a sublayer within a group layer
+                if (trafficRoadClosuresLayer) {
+                    layerMap.trafficDanger = trafficRoadClosuresLayer;
+                    console.log(`Found Traffic & Road Closures layer: "${trafficRoadClosuresLayer.title}" (id: ${trafficRoadClosuresLayer.id}, type: ${trafficRoadClosuresLayer.type || 'sublayer'})`);
                 } else {
-                    console.warn("Layer 'Traffic' not found in webmap");
+                    console.warn("Layer 'Traffic & Road Closures' not found in webmap (checked top-level and sublayers)");
+                    // Try alternative search - look for any layer with "Traffic" and "Road" in the title
+                    const alternativeLayer = map.allLayers.find(l => 
+                        l.title && (l.title.toLowerCase().includes("traffic") && l.title.toLowerCase().includes("road"))
+                    );
+                    if (alternativeLayer) {
+                        layerMap.trafficDanger = alternativeLayer;
+                        console.log(`Using alternative layer for trafficDanger: "${alternativeLayer.title}"`);
+                    } else {
+                        // Last resort: search sublayers more broadly
+                        for (const layer of map.allLayers.toArray()) {
+                            if (layer.sublayers) {
+                                const altSublayer = layer.sublayers.find(s => 
+                                    s.title && (s.title.toLowerCase().includes("traffic") || s.title.toLowerCase().includes("road"))
+                                );
+                                if (altSublayer) {
+                                    layerMap.trafficDanger = altSublayer;
+                                    console.log(`Using alternative sublayer for trafficDanger: "${altSublayer.title}" in "${layer.title}"`);
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
 
+                // Construction & Road Closures → Construction
+                if (constructionLayer) {
+                    layerMap.construction = constructionLayer;
+                    console.log("Found layer: Construction");
+                } else {
+                    console.warn("Layer 'Construction' not found in webmap");
+                }
+
+                // Noise Pollution → Noise pollution
                 if (noiseLayer) {
                     layerMap.noise = noiseLayer;
                     console.log("Found layer: Noise pollution");
@@ -109,6 +212,7 @@
                     console.warn("Layer 'Noise pollution' not found in webmap");
                 }
 
+                // Demographics → The Hague population density
                 if (popDensityLayer) {
                     layerMap.popdensity = popDensityLayer;
                     console.log("Found layer: The Hague population density");
@@ -116,11 +220,17 @@
                     console.warn("Layer 'The Hague population density' not found in webmap");
                 }
 
-                // Log all available layers for debugging
-                console.log("All layers in webmap:");
-                map.allLayers.forEach(layer => {
-                    console.log(`  - "${layer.title}" (type: ${layer.type})`);
-                });
+                // Note: trafficLayer (title: "Traffic") is kept for backward compatibility
+                // but is not currently mapped to any website toggle
+                if (trafficLayer) {
+                    layerMap.traffic = trafficLayer;
+                    console.log("Found layer: Traffic (kept for backward compatibility)");
+                } else {
+                    console.warn("Layer 'Traffic' not found in webmap");
+                }
+
+                // Additional debug: Log final layerMap
+                console.log("Final layerMap keys:", Object.keys(layerMap));
 
                 // Initially set all mapped layers to invisible
                 Object.values(layerMap).forEach(layer => {
@@ -151,6 +261,14 @@
                     if (layer) {
                         // Set the layer visibility
                         layer.visible = visible;
+                        
+                        // If this is a sublayer, also ensure its parent layer is visible
+                        // (sublayers can only be visible if their parent is visible)
+                        if (layer.parent) {
+                            layer.parent.visible = true;
+                            console.log(`Also set parent layer "${layer.parent.title}" to visible for sublayer "${layer.title}"`);
+                        }
+                        
                         console.log(`Layer "${layer.title}" (key: ${layerKey}) visibility set to ${visible}`);
                     } else {
                         console.warn(`Layer key "${layerKey}" not found in layerMap. Available keys:`, Object.keys(layerMap));

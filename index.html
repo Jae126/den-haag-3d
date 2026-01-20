@@ -55,9 +55,19 @@
                             <span>City Data Layers</span>
                         </button>
                         <button class="menu-item" data-menu="settings" onclick="toggleMenu('settings')" style="width: 100%; padding: 1.25rem; border-radius: 1rem; display: flex; align-items: center; gap: 1rem; transition: all 0.2s; background: rgba(30, 41, 59, 0.5); color: var(--text-slate-300); border: none; cursor: pointer; font-size: 1.1rem; font-weight: 500;" onmouseover="if(!this.classList.contains('active')) { this.style.background='rgba(30, 41, 59, 1)'; this.style.color='rgb(52, 211, 153)'; }" onmouseout="updateMenuItemStyle(this)">
-                            <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1.5rem; height: 1.5rem;">
-                                <circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
-                            </svg>
+                            <span class="nav-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <line x1="12" y1="1" x2="12" y2="6"/>
+                                    <line x1="12" y1="18" x2="12" y2="23"/>
+                                    <line x1="23" y1="12" x2="18" y2="12"/>
+                                    <line x1="6" y1="12" x2="1" y2="12"/>
+                                    <line x1="19.07" y1="4.93" x2="14.83" y2="9.17"/>
+                                    <line x1="9.17" y1="14.83" x2="4.93" y2="19.07"/>
+                                    <line x1="19.07" y1="19.07" x2="14.83" y2="14.83"/>
+                                    <line x1="9.17" y1="9.17" x2="4.93" y2="4.93"/>
+                                </svg>
+                            </span>
                             <span>Settings</span>
                         </button>
                     </nav>
@@ -1321,9 +1331,10 @@
         const layerKeyMapping = {
             'green': 'bomen',           // Green Spaces & Trees → Bomen
             'heat': 'heat',             // Heat Stress → Hittestress
-            'traffic': 'ov',            // Traffic Congestion & Dangerous Spots → Openbaar Vervoer Nederland
+            'traffic': 'trafficDanger', // Traffic Congestion & Dangerous Spots → Traffic & Road Closures
+            'construction': 'construction', // Construction & Road Closures → Construction
+            'transport': 'ov',          // Public Transport Network → Openbaar Vervoer Nederland
             'demographics': 'popdensity', // Demographics → The Hague population density
-            'transport': 'traffic',     // Public Transport Network → Traffic
             'noise': 'noise'            // Noise Pollution → Noise pollution
         };
 
@@ -2011,6 +2022,68 @@
                 updateLayerItemStyle(item);
             });
             
+            // Make entire layer card clickable for selection
+            document.querySelectorAll('.layer-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    // Don't trigger selection if clicking on interactive elements
+                    const target = e.target;
+                    const isSwitch = target.closest('.switch') || target.closest('label.switch') || target.closest('.slider') || target.type === 'checkbox';
+                    const isLabelButton = target.classList.contains('layer-label') || target.closest('.layer-label');
+                    
+                    // If clicking on switch elements, don't select (let toggle handle it)
+                    if (isSwitch) {
+                        return;
+                    }
+                    
+                    // If clicking on the label button, let it handle selection (or we can handle it here)
+                    // Get the layer ID from data-layer attribute
+                    const layerId = item.getAttribute('data-layer');
+                    if (layerId) {
+                        // Toggle selection: if already selected, deselect; otherwise select
+                        if (item.classList.contains('selected')) {
+                            selectLayer(null);
+                        } else {
+                            selectLayer(layerId);
+                        }
+                    }
+                });
+                
+                // Prevent checkbox change event from bubbling to card click
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                if (checkbox) {
+                    checkbox.addEventListener('change', function(e) {
+                        e.stopPropagation();
+                    });
+                    // Also prevent clicks on the checkbox from triggering card selection
+                    checkbox.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                    });
+                }
+                
+                // Prevent clicks on the switch label/slider from triggering card selection
+                const switchLabel = item.querySelector('label.switch');
+                if (switchLabel) {
+                    switchLabel.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                    });
+                }
+                const slider = item.querySelector('.slider');
+                if (slider) {
+                    slider.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                    });
+                }
+                
+                // Prevent label button click from bubbling (it has its own onclick handler)
+                // This avoids double-triggering selectLayer
+                const labelButton = item.querySelector('.layer-label');
+                if (labelButton) {
+                    labelButton.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                    });
+                }
+            });
+            
             // Initialize language buttons
             setLanguage(currentLanguage);
             
@@ -2127,15 +2200,25 @@
             const container = document.querySelector('.neighborhood-areas-grid');
             if (!container) return;
             
+            // Remove any existing inline detail cards from the grid
+            const existingDetailCards = container.querySelectorAll('.demographics-area-detail-card-inline');
+            existingDetailCards.forEach(card => card.remove());
+            
             container.innerHTML = '';
+            
+            let selectedCardIndex = -1;
             
             denHaagAreas.forEach((area, index) => {
                 const value = calculateIndicator(area, currentChoroplethIndicator);
                 const color = getPolygonColor(area);
                 const isSelected = selectedDemographicsArea === area.id;
+                if (isSelected) {
+                    selectedCardIndex = index;
+                }
                 
                 const card = document.createElement('div');
                 card.className = 'neighborhood-area-card';
+                card.setAttribute('data-area-id', area.id);
                 if (isSelected) card.classList.add('selected');
                 card.style.borderColor = isSelected ? 'rgba(167, 139, 250, 0.8)' : `rgba(${parseInt(color.slice(1, 3), 16)}, ${parseInt(color.slice(3, 5), 16)}, ${parseInt(color.slice(5, 7), 16)}, 0.5)`;
                 card.onclick = () => selectDemographicsArea(area.id);
@@ -2154,6 +2237,189 @@
                 `;
                 container.appendChild(card);
             });
+            
+            // If a card is selected, insert detail card after its row
+            if (selectedCardIndex >= 0) {
+                const selectedArea = denHaagAreas[selectedCardIndex];
+                const rowStartIndex = Math.floor(selectedCardIndex / 2) * 2;
+                const rowEndIndex = Math.min(rowStartIndex + 1, denHaagAreas.length - 1);
+                
+                const cards = container.querySelectorAll('.neighborhood-area-card');
+                const insertAfterCard = cards[rowEndIndex];
+                
+                if (insertAfterCard) {
+                    const detailCard = createInlineDemographicsAreaDetailCard(selectedArea);
+                    insertAfterCard.insertAdjacentElement('afterend', detailCard);
+                } else {
+                    const detailCard = createInlineDemographicsAreaDetailCard(selectedArea);
+                    container.appendChild(detailCard);
+                }
+            }
+        }
+        
+        function createInlineDemographicsAreaDetailCard(area) {
+            const lang = currentLanguage;
+            
+            // Calculate chart data
+            const ageData = area.a_inw ? [
+                { label: '0-14', value: area.a_00_14, color: 'rgb(59, 130, 246)' },
+                { label: '15-24', value: area.a_15_24, color: 'rgb(6, 182, 212)' },
+                { label: '25-44', value: area.a_25_44, color: 'rgb(16, 185, 129)' },
+                { label: '45-64', value: area.a_45_64, color: 'rgb(251, 146, 60)' },
+                { label: '65+', value: area.a_65_oo, color: 'rgb(251, 146, 60)' }
+            ] : [];
+            
+            const originData = area.a_inw ? [
+                { label: lang === 'en' ? 'Netherlands' : 'Nederland', value: area.a_nl_all, color: 'rgb(251, 146, 60)' },
+                { label: lang === 'en' ? 'Europe (excl. NL)' : 'Europa (excl. NL)', value: area.a_eur_al, color: 'rgb(59, 130, 246)' },
+                { label: lang === 'en' ? 'Outside Europe' : 'Buiten Europa', value: area.a_neu_al, color: 'rgb(139, 92, 246)' }
+            ] : [];
+            
+            const householdData = area.a_hh ? [
+                { label: lang === 'en' ? '1-person' : '1-persoons', value: area.a_1p_hh, color: 'rgb(6, 182, 212)' },
+                { label: lang === 'en' ? 'No children' : 'Zonder kinderen', value: area.a_hh_z_k, color: 'rgb(16, 185, 129)' },
+                { label: lang === 'en' ? 'With children' : 'Met kinderen', value: area.a_hh_m_k, color: 'rgb(139, 92, 246)' }
+            ] : [];
+            
+            const detailCard = document.createElement('div');
+            detailCard.className = 'demographics-area-detail-card demographics-area-detail-card-inline';
+            detailCard.style.cssText = 'grid-column: 1 / -1; padding: 1.5rem; background: rgba(15, 23, 42, 0.95); border: 2px solid rgba(139, 92, 246, 0.5); border-radius: var(--radius-lg); margin-top: 0.5rem;';
+            
+            const ageChartHtml = ageData.map(item => {
+                const pct = item.value ? (item.value / area.a_inw) * 100 : 0;
+                return `
+                    <div style="margin-bottom: 0.5rem;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.25rem;">
+                            <span>${item.label}</span>
+                            <span>${pct.toFixed(1)}%</span>
+                        </div>
+                        <div style="width: 100%; height: 0.75rem; background: rgba(51, 65, 85, 0.5); border-radius: 9999px; overflow: hidden;">
+                            <div style="width: ${pct}%; height: 100%; background: ${item.color};"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            const originChartHtml = originData.map(item => {
+                const pct = item.value ? (item.value / area.a_inw) * 100 : 0;
+                return `
+                    <div style="margin-bottom: 0.5rem;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.25rem;">
+                            <span>${item.label}</span>
+                            <span>${pct.toFixed(1)}%</span>
+                        </div>
+                        <div style="width: 100%; height: 0.75rem; background: rgba(51, 65, 85, 0.5); border-radius: 9999px; overflow: hidden;">
+                            <div style="width: ${pct}%; height: 100%; background: ${item.color};"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            const householdChartHtml = householdData.map(item => {
+                const pct = item.value ? (item.value / area.a_hh) * 100 : 0;
+                return `
+                    <div style="margin-bottom: 0.5rem;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.25rem;">
+                            <span>${item.label}</span>
+                            <span>${pct.toFixed(1)}%</span>
+                        </div>
+                        <div style="width: 100%; height: 0.75rem; background: rgba(51, 65, 85, 0.5); border-radius: 9999px; overflow: hidden;">
+                            <div style="width: ${pct}%; height: 100%; background: ${item.color};"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            const incomeSectionHtml = area.g_ink_pi ? `
+                <div class="income-section" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(139, 92, 246, 0.2);">
+                    <div class="income-item" style="padding: 1rem; background: rgba(30, 41, 59, 0.3); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: var(--radius-lg);">
+                        <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.5rem;">${lang === 'en' ? 'Avg Income per Inhabitant' : 'Gem. Inkomen per Inwoner'}</p>
+                        <p style="color: rgb(196, 181, 253); font-weight: 600; font-size: 1.1rem; margin: 0;">€${formatDemographicsValue(area.g_ink_pi)}</p>
+                    </div>
+                    <div class="income-item" style="padding: 1rem; background: rgba(30, 41, 59, 0.3); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: var(--radius-lg);">
+                        <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.5rem;">${lang === 'en' ? 'Low-Income Households' : 'Laaginkomenshuishoudens'}</p>
+                        <p style="color: rgb(196, 181, 253); font-weight: 600; font-size: 1.1rem; margin: 0;">${area.p_hh_lkk || '—'}%</p>
+                    </div>
+                </div>
+            ` : '';
+            
+            detailCard.innerHTML = `
+                <div class="demographics-area-header" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 2rem; height: 2rem; color: rgb(167, 139, 250); flex-shrink: 0;">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <div>
+                        <h3 style="color: rgb(167, 139, 250); font-size: 1.5rem; font-weight: 700; margin: 0 0 0.25rem 0;">${area.name}</h3>
+                        <p style="color: var(--text-slate-400); font-size: 0.875rem; margin: 0;">${area.id} · CBS ${lang === 'en' ? 'Area Code' : 'Gebiedscode'}</p>
+                    </div>
+                </div>
+                <div class="demographics-kpi-strip" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                    <div class="demographics-kpi-item" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: var(--radius-lg);">
+                        <div class="kpi-header" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1rem; height: 1rem; color: rgb(167, 139, 250);">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                            </svg>
+                            <span style="font-size: 0.75rem; color: var(--text-slate-400);">${lang === 'en' ? 'Total Population' : 'Totale Bevolking'}</span>
+                        </div>
+                        <p style="font-size: 1.25rem; font-weight: 700; color: var(--text-slate-200); margin: 0;">${formatDemographicsValue(area.a_inw)}</p>
+                    </div>
+                    <div class="demographics-kpi-item" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: var(--radius-lg);">
+                        <div class="kpi-header" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1rem; height: 1rem; color: rgb(167, 139, 250);">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+                            </svg>
+                            <span style="font-size: 0.75rem; color: var(--text-slate-400);">${lang === 'en' ? 'Density' : 'Dichtheid'}</span>
+                        </div>
+                        <p style="font-size: 1.25rem; font-weight: 700; color: var(--text-slate-200); margin: 0;">${formatDemographicsValue(area.bev_dich)}/km²</p>
+                    </div>
+                    <div class="demographics-kpi-item" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: var(--radius-lg);">
+                        <div class="kpi-header" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1rem; height: 1rem; color: rgb(167, 139, 250);">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+                            </svg>
+                            <span style="font-size: 0.75rem; color: var(--text-slate-400);">${lang === 'en' ? 'Avg HH Size' : 'Gem. HH Grootte'}</span>
+                        </div>
+                        <p style="font-size: 1.25rem; font-weight: 700; color: var(--text-slate-200); margin: 0;">${formatDemographicsValue(area.g_hhgro)}</p>
+                    </div>
+                    <div class="demographics-kpi-item" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: var(--radius-lg);">
+                        <div class="kpi-header" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1rem; height: 1rem; color: rgb(167, 139, 250);">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            </svg>
+                            <span style="font-size: 0.75rem; color: var(--text-slate-400);">${lang === 'en' ? 'Households' : 'Huishoudens'}</span>
+                        </div>
+                        <p style="font-size: 1.25rem; font-weight: 700; color: var(--text-slate-200); margin: 0;">${formatDemographicsValue(area.a_hh)}</p>
+                    </div>
+                </div>
+                <div class="demographics-charts" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="demographics-chart" style="display: flex; flex-direction: column;">
+                        <h4 style="color: rgb(167, 139, 250); margin-bottom: 0.75rem; font-weight: 600;">${lang === 'en' ? 'Age Distribution' : 'Leeftijdsverdeling'}</h4>
+                        <div class="chart-container" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            ${ageChartHtml}
+                        </div>
+                    </div>
+                    <div class="demographics-chart" style="display: flex; flex-direction: column;">
+                        <h4 style="color: rgb(167, 139, 250); margin-bottom: 0.75rem; font-weight: 600;">${lang === 'en' ? 'Origin' : 'Herkomst'}</h4>
+                        <div class="chart-container" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            ${originChartHtml}
+                        </div>
+                    </div>
+                    <div class="demographics-chart" style="display: flex; flex-direction: column;">
+                        <h4 style="color: rgb(167, 139, 250); margin-bottom: 0.75rem; font-weight: 600;">${lang === 'en' ? 'Household Types' : 'Huishoudtypes'}</h4>
+                        <div class="chart-container" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            ${householdChartHtml}
+                        </div>
+                    </div>
+                </div>
+                ${incomeSectionHtml}
+                <div class="demographics-footnote" style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(139, 92, 246, 0.2);">
+                    <p style="font-size: 0.75rem; color: var(--text-slate-500); font-style: italic; margin: 0;">
+                        CBS StatLine wijk/buurt indicators. Figures may use rounding; sub-totals may not sum to 100%.
+                    </p>
+                </div>
+            `;
+            
+            return detailCard;
         }
 
         function getIndicatorLabel(indicator) {
@@ -2172,18 +2438,21 @@
 
         function selectDemographicsArea(areaId) {
             if (selectedDemographicsArea === areaId) {
+                // Clicking the same card again - collapse (deselect)
                 selectedDemographicsArea = null;
-                document.getElementById('demographics-area-detail').classList.add('hidden');
                 document.getElementById('demographics-summary').classList.remove('hidden');
+                // Hide the old detail card element if it exists
+                const oldDetail = document.getElementById('demographics-area-detail');
+                if (oldDetail) oldDetail.classList.add('hidden');
             } else {
+                // Select new area
                 selectedDemographicsArea = areaId;
-                const area = denHaagAreas.find(a => a.id === areaId);
-                if (area) {
-                    renderAreaDetails(area);
-                    document.getElementById('demographics-area-detail').classList.remove('hidden');
-                    document.getElementById('demographics-summary').classList.add('hidden');
-                }
+                document.getElementById('demographics-summary').classList.add('hidden');
+                // Hide the old detail card element (we use inline cards now)
+                const oldDetail = document.getElementById('demographics-area-detail');
+                if (oldDetail) oldDetail.classList.add('hidden');
             }
+            // Re-render to update selected states and insert detail card inline
             renderNeighborhoodAreas();
         }
 
@@ -2318,16 +2587,26 @@
             const container = document.querySelector('.green-spaces-grid');
             if (!container) return;
             
+            // Remove any existing inline detail cards from the grid
+            const existingDetailCards = container.querySelectorAll('.green-space-detail-card-inline');
+            existingDetailCards.forEach(card => card.remove());
+            
             container.innerHTML = '';
+            
+            let selectedCardIndex = -1;
             
             greenSpaces.forEach((space, index) => {
                 const lang = currentLanguage;
                 const isSelected = selectedGreenSpace === space.id;
+                if (isSelected) {
+                    selectedCardIndex = index;
+                }
                 const typeColor = space.type === 'forest' ? 'rgb(5, 150, 105)' : 'rgb(16, 185, 129)';
                 const typeBg = space.type === 'forest' ? 'rgba(5, 150, 105, 0.2)' : 'rgba(16, 185, 129, 0.2)';
                 
                 const card = document.createElement('div');
                 card.className = 'green-space-card';
+                card.setAttribute('data-space-id', space.id);
                 if (isSelected) card.classList.add('selected');
                 card.style.borderColor = isSelected ? 'rgba(74, 222, 128, 0.8)' : 'rgba(34, 197, 94, 0.5)';
                 card.onclick = () => selectGreenSpace(space.id);
@@ -2358,20 +2637,86 @@
                 `;
                 container.appendChild(card);
             });
+            
+            // If a card is selected, insert detail card after its row
+            if (selectedCardIndex >= 0) {
+                const selectedSpace = greenSpaces[selectedCardIndex];
+                const rowStartIndex = Math.floor(selectedCardIndex / 2) * 2;
+                const rowEndIndex = Math.min(rowStartIndex + 1, greenSpaces.length - 1);
+                
+                const cards = container.querySelectorAll('.green-space-card');
+                const insertAfterCard = cards[rowEndIndex];
+                
+                if (insertAfterCard) {
+                    const detailCard = createInlineGreenSpaceDetailCard(selectedSpace);
+                    insertAfterCard.insertAdjacentElement('afterend', detailCard);
+                } else {
+                    const detailCard = createInlineGreenSpaceDetailCard(selectedSpace);
+                    container.appendChild(detailCard);
+                }
+            }
+        }
+        
+        function createInlineGreenSpaceDetailCard(space) {
+            const lang = currentLanguage;
+            const typeColor = space.type === 'forest' ? 'rgb(5, 150, 105)' : 'rgb(16, 185, 129)';
+            const typeBg = space.type === 'forest' ? 'rgba(5, 150, 105, 0.2)' : 'rgba(16, 185, 129, 0.2)';
+            
+            const detailCard = document.createElement('div');
+            detailCard.className = 'green-space-detail-card green-space-detail-card-inline';
+            detailCard.style.cssText = 'grid-column: 1 / -1; padding: 1.5rem; background: rgba(15, 23, 42, 0.95); border: 2px solid rgba(34, 197, 94, 0.5); border-radius: var(--radius-lg); margin-top: 0.5rem;';
+            
+            detailCard.innerHTML = `
+                <div class="green-space-detail-header" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                    <div class="green-space-icon-box" style="padding: 0.75rem; background: ${typeBg}; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 2rem; height: 2rem; color: ${typeColor};">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 style="color: rgb(74, 222, 128); font-size: 1.5rem; font-weight: 700; margin: 0 0 0.25rem 0;">${space.name}</h3>
+                        <p style="color: var(--text-slate-400); font-size: 0.875rem; margin: 0; text-transform: capitalize;">${space.type}</p>
+                    </div>
+                </div>
+                <p style="color: var(--text-slate-300); margin-bottom: 1rem;">${space.description[lang]}</p>
+                <div class="green-space-metrics" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                    <div class="green-space-metric" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border-radius: var(--radius-lg);">
+                        <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.25rem;">${lang === 'en' ? 'Area' : 'Oppervlakte'}</p>
+                        <p style="font-size: 1.1rem; font-weight: 600; color: var(--text-slate-200); margin: 0;">${space.area}</p>
+                    </div>
+                    <div class="green-space-metric" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border-radius: var(--radius-lg);">
+                        <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.25rem;">${lang === 'en' ? 'Trees' : 'Bomen'}</p>
+                        <p style="font-size: 1.1rem; font-weight: 600; color: var(--text-slate-200); margin: 0;">~${space.trees.toLocaleString()}</p>
+                    </div>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.5rem;">${lang === 'en' ? 'Facilities' : 'Voorzieningen'}</p>
+                    <div class="facilities-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                        ${space.facilities[lang].map(facility => `
+                            <span style="padding: 0.25rem 0.75rem; background: rgba(34, 197, 94, 0.2); color: rgb(74, 222, 128); border-radius: 9999px; font-size: 0.75rem;">${facility}</span>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            return detailCard;
         }
 
         function selectGreenSpace(spaceId) {
             if (selectedGreenSpace === spaceId) {
+                // Clicking the same card again - collapse (deselect)
                 selectedGreenSpace = null;
-                document.getElementById('green-space-detail').classList.add('hidden');
+                // Hide the old detail card element if it exists
+                const oldDetail = document.getElementById('green-space-detail');
+                if (oldDetail) oldDetail.classList.add('hidden');
             } else {
+                // Select new space
                 selectedGreenSpace = spaceId;
-                const space = greenSpaces.find(s => s.id === spaceId);
-                if (space) {
-                    renderGreenSpaceDetails(space);
-                    document.getElementById('green-space-detail').classList.remove('hidden');
-                }
+                // Hide the old detail card element (we use inline cards now)
+                const oldDetail = document.getElementById('green-space-detail');
+                if (oldDetail) oldDetail.classList.add('hidden');
             }
+            // Re-render to update selected states and insert detail card inline
             renderGreenSpaces();
         }
 
@@ -3200,11 +3545,20 @@
             const container = document.querySelector('.heat-zones-grid');
             if (!container) return;
             
+            // Remove any existing inline detail cards from the grid
+            const existingDetailCards = container.querySelectorAll('.heat-zone-detail-card-inline');
+            existingDetailCards.forEach(card => card.remove());
+            
             container.innerHTML = '';
             
-            heatZones.forEach((zone) => {
+            let selectedCardIndex = -1;
+            
+            heatZones.forEach((zone, index) => {
                 const lang = currentLanguage;
                 const isSelected = selectedHeatZone === zone.id;
+                if (isSelected) {
+                    selectedCardIndex = index;
+                }
                 const zoneColor = getHeatZoneColor(zone.intensity);
                 const borderColor = getHeatZoneBorderColor(zone.intensity);
                 const bgColor = zone.intensity === 'high' ? 'rgba(239, 68, 68, 0.2)' : 
@@ -3213,6 +3567,7 @@
                 
                 const card = document.createElement('div');
                 card.className = 'heat-zone-card';
+                card.setAttribute('data-zone-id', zone.id);
                 if (isSelected) card.classList.add('selected');
                 card.style.borderColor = isSelected ? 'rgba(248, 113, 113, 0.8)' : `rgba(${zone.intensity === 'high' ? '239, 68, 68' : zone.intensity === 'medium' ? '249, 115, 22' : '234, 179, 8'}, 0.5)`;
                 card.onclick = () => selectHeatZone(zone.id);
@@ -3236,20 +3591,75 @@
                 `;
                 container.appendChild(card);
             });
+            
+            // If a card is selected, insert detail card after its row
+            if (selectedCardIndex >= 0) {
+                const selectedZone = heatZones[selectedCardIndex];
+                const rowStartIndex = Math.floor(selectedCardIndex / 2) * 2;
+                const rowEndIndex = Math.min(rowStartIndex + 1, heatZones.length - 1);
+                
+                // Find the card element at rowEndIndex
+                const cards = container.querySelectorAll('.heat-zone-card');
+                const insertAfterCard = cards[rowEndIndex];
+                
+                if (insertAfterCard) {
+                    // Create inline detail card
+                    const detailCard = createInlineHeatZoneDetailCard(selectedZone);
+                    insertAfterCard.insertAdjacentElement('afterend', detailCard);
+                } else {
+                    // Fallback: append to end if something went wrong
+                    const detailCard = createInlineHeatZoneDetailCard(selectedZone);
+                    container.appendChild(detailCard);
+                }
+            }
+        }
+        
+        function createInlineHeatZoneDetailCard(zone) {
+            const lang = currentLanguage;
+            const zoneColor = getHeatZoneColor(zone.intensity);
+            
+            const detailCard = document.createElement('div');
+            detailCard.className = 'heat-zone-detail-card heat-zone-detail-card-inline';
+            detailCard.style.cssText = 'grid-column: 1 / -1; padding: 1.5rem; background: rgba(15, 23, 42, 0.95); border: 2px solid rgba(239, 68, 68, 0.5); border-radius: var(--radius-lg); margin-top: 0.5rem;';
+            
+            detailCard.innerHTML = `
+                <div class="heat-zone-detail-header" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 2rem; height: 2rem; color: rgb(248, 113, 113);">
+                        <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/>
+                    </svg>
+                    <div>
+                        <h3 style="color: rgb(248, 113, 113); font-size: 1.5rem; font-weight: 700; margin: 0 0 0.25rem 0;">${zone.area[lang]}</h3>
+                        <p style="color: var(--text-slate-400); font-size: 0.875rem; margin: 0;">${lang === 'en' ? 'Current Temperature' : 'Huidige Temperatuur'}: ${zone.temp}</p>
+                    </div>
+                </div>
+                <div class="heat-zone-detail-metrics" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                    <div class="heat-detail-metric" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border-radius: var(--radius-lg);">
+                        <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.25rem;">Intensity</p>
+                        <p style="font-size: 1.1rem; font-weight: 600; color: var(--text-slate-200); margin: 0; text-transform: capitalize;">${zone.intensity}</p>
+                    </div>
+                    <div class="heat-detail-metric" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border-radius: var(--radius-lg);">
+                        <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.25rem;">Risk Level</p>
+                        <p style="font-size: 1.1rem; font-weight: 600; color: var(--text-slate-200); margin: 0;">${zone.intensity === 'high' ? (lang === 'en' ? 'Elevated' : 'Verhoogd') : (lang === 'en' ? 'Normal' : 'Normaal')}</p>
+                    </div>
+                    <div class="heat-detail-metric" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border-radius: var(--radius-lg);">
+                        <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.25rem;">Trend</p>
+                        <p style="font-size: 1.1rem; font-weight: 600; color: var(--text-slate-200); margin: 0;">↑ +2°C</p>
+                    </div>
+                </div>
+            `;
+            
+            return detailCard;
         }
 
         function selectHeatZone(zoneId) {
             if (selectedHeatZone === zoneId) {
+                // Clicking the same card again - collapse (deselect)
                 selectedHeatZone = null;
-                document.getElementById('heat-zone-detail').classList.add('hidden');
             } else {
+                // Select new zone
                 selectedHeatZone = zoneId;
-                const zone = heatZones.find(z => z.id === zoneId);
-                if (zone) {
-                    renderHeatZoneDetails(zone);
-                    document.getElementById('heat-zone-detail').classList.remove('hidden');
-                }
             }
+            // Re-render to update selected states and insert detail card inline
             renderHeatZones();
         }
 
@@ -3326,11 +3736,20 @@
             const container = document.querySelector('.noise-zones-grid');
             if (!container) return;
             
+            // Remove any existing inline detail cards from the grid
+            const existingDetailCards = container.querySelectorAll('.noise-zone-detail-card-inline');
+            existingDetailCards.forEach(card => card.remove());
+            
             container.innerHTML = '';
             
-            noiseZones.forEach((zone) => {
+            let selectedCardIndex = -1;
+            
+            noiseZones.forEach((zone, index) => {
                 const lang = currentLanguage;
                 const isSelected = selectedNoiseZone === zone.id;
+                if (isSelected) {
+                    selectedCardIndex = index;
+                }
                 const zoneColor = getNoiseColor(zone.category);
                 const borderColor = getNoiseBorderColor(zone.category);
                 const bgColor = zone.category === 'high' ? 'rgba(239, 68, 68, 0.2)' : 
@@ -3339,6 +3758,7 @@
                 
                 const card = document.createElement('div');
                 card.className = 'noise-zone-card';
+                card.setAttribute('data-zone-id', zone.id);
                 if (isSelected) card.classList.add('selected');
                 card.style.borderColor = isSelected ? 'rgba(167, 139, 250, 0.8)' : `rgba(${zone.category === 'high' ? '239, 68, 68' : zone.category === 'moderate' ? '234, 179, 8' : '34, 197, 94'}, 0.5)`;
                 card.onclick = () => selectNoiseZone(zone.id);
@@ -3362,20 +3782,79 @@
                 `;
                 container.appendChild(card);
             });
+            
+            // If a card is selected, insert detail card after its row
+            if (selectedCardIndex >= 0) {
+                const selectedZone = noiseZones[selectedCardIndex];
+                const rowStartIndex = Math.floor(selectedCardIndex / 2) * 2;
+                const rowEndIndex = Math.min(rowStartIndex + 1, noiseZones.length - 1);
+                
+                const cards = container.querySelectorAll('.noise-zone-card');
+                const insertAfterCard = cards[rowEndIndex];
+                
+                if (insertAfterCard) {
+                    const detailCard = createInlineNoiseZoneDetailCard(selectedZone);
+                    insertAfterCard.insertAdjacentElement('afterend', detailCard);
+                } else {
+                    const detailCard = createInlineNoiseZoneDetailCard(selectedZone);
+                    container.appendChild(detailCard);
+                }
+            }
+        }
+        
+        function createInlineNoiseZoneDetailCard(zone) {
+            const lang = currentLanguage;
+            const zoneColor = getNoiseColor(zone.category);
+            const iconPath = getNoiseIconPath(zone.category);
+            
+            const detailCard = document.createElement('div');
+            detailCard.className = 'noise-zone-detail-card noise-zone-detail-card-inline';
+            detailCard.style.cssText = 'grid-column: 1 / -1; padding: 1.5rem; background: rgba(15, 23, 42, 0.95); border: 2px solid rgba(139, 92, 246, 0.5); border-radius: var(--radius-lg); margin-top: 0.5rem;';
+            
+            detailCard.innerHTML = `
+                <div class="noise-zone-detail-header" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 2rem; height: 2rem; color: ${zoneColor}; flex-shrink: 0;">
+                        ${iconPath}
+                    </svg>
+                    <div>
+                        <h3 style="color: rgb(167, 139, 250); font-size: 1.5rem; font-weight: 700; margin: 0 0 0.25rem 0;">${zone.area[lang]}</h3>
+                        <p style="color: var(--text-slate-400); font-size: 0.875rem; margin: 0; text-transform: capitalize;">${lang === 'en' ? 'Noise Level:' : 'Geluidsniveau:'} ${zone.category}</p>
+                    </div>
+                </div>
+                <div class="noise-zone-detail-metrics" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                    <div class="noise-detail-metric" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border-radius: var(--radius-lg);">
+                        <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.25rem;">${lang === 'en' ? 'Sound Level' : 'Geluidsniveau'}</p>
+                        <p style="font-size: 1.5rem; font-weight: 700; color: var(--text-slate-200); margin: 0;">${zone.level} dB</p>
+                    </div>
+                    <div class="noise-detail-metric" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border-radius: var(--radius-lg);">
+                        <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.25rem;">${lang === 'en' ? 'Category' : 'Categorie'}</p>
+                        <p style="font-size: 1.1rem; font-weight: 600; color: var(--text-slate-200); margin: 0; text-transform: capitalize;">${zone.category}</p>
+                    </div>
+                    <div class="noise-detail-metric" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border-radius: var(--radius-lg);">
+                        <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.25rem;">${lang === 'en' ? 'Trend' : 'Trend'}</p>
+                        <p style="font-size: 1.1rem; font-weight: 600; color: var(--text-slate-200); margin: 0;">${zone.category === 'high' ? '→ Stable' : '↓ -2 dB'}</p>
+                    </div>
+                </div>
+            `;
+            
+            return detailCard;
         }
 
         function selectNoiseZone(zoneId) {
             if (selectedNoiseZone === zoneId) {
+                // Clicking the same card again - collapse (deselect)
                 selectedNoiseZone = null;
-                document.getElementById('noise-zone-detail').classList.add('hidden');
+                // Hide the old detail card element if it exists
+                const oldDetail = document.getElementById('noise-zone-detail');
+                if (oldDetail) oldDetail.classList.add('hidden');
             } else {
+                // Select new zone
                 selectedNoiseZone = zoneId;
-                const zone = noiseZones.find(z => z.id === zoneId);
-                if (zone) {
-                    renderNoiseZoneDetails(zone);
-                    document.getElementById('noise-zone-detail').classList.remove('hidden');
-                }
+                // Hide the old detail card element (we use inline cards now)
+                const oldDetail = document.getElementById('noise-zone-detail');
+                if (oldDetail) oldDetail.classList.add('hidden');
             }
+            // Re-render to update selected states and insert detail card inline
             renderNoiseZones();
         }
 
