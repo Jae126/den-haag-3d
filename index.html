@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Den Haag in 3D</title>
     <link rel="stylesheet" href="css/style.css">
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDOQBspPPUzGmXqi8lG18Jg5idvksDm6x0&libraries=geometry,drawing,places&language=en"></script>
+    <!-- Google Maps API with required libraries for route planning -->
+    <!-- Libraries: geometry (for calculations), drawing (for map interactions), places (for autocomplete), directions (for route planning) -->
+    <!-- IMPORTANT: For GitHub Pages deployment, ensure API key restrictions allow: https://jae126.github.io/* -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDOQBspPPUzGmXqi8lG18Jg5idvksDm6x0&libraries=geometry,drawing,places,directions&language=en"></script>
     <!-- Public Transport Real-time Handler -->
     <script src="js/transport.js"></script>
     <!-- Public Transport Planner (Route Planning & Nearby Stops) -->
@@ -46,13 +49,13 @@
                             <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1.5rem; height: 1.5rem;">
                                 <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                             </svg>
-                            <span>Design Concept</span>
+                            <span data-i18n="design-concept">Design Concept</span>
                         </button>
                         <button class="menu-item" data-menu="layers" onclick="toggleMenu('layers')" style="width: 100%; padding: 1.25rem; border-radius: 1rem; display: flex; align-items: center; gap: 1rem; transition: all 0.2s; background: rgba(30, 41, 59, 0.5); color: var(--text-slate-300); border: none; cursor: pointer; font-size: 1.1rem; font-weight: 500;" onmouseover="if(!this.classList.contains('active')) { this.style.background='rgba(30, 41, 59, 1)'; this.style.color='rgb(52, 211, 153)'; }" onmouseout="updateMenuItemStyle(this)">
                             <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1.5rem; height: 1.5rem;">
                                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                             </svg>
-                            <span>City Data Layers</span>
+                            <span data-i18n="city-data-layers">City Data Layers</span>
                         </button>
                         <button class="menu-item" data-menu="settings" onclick="toggleMenu('settings')" style="width: 100%; padding: 1.25rem; border-radius: 1rem; display: flex; align-items: center; gap: 1rem; transition: all 0.2s; background: rgba(30, 41, 59, 0.5); color: var(--text-slate-300); border: none; cursor: pointer; font-size: 1.1rem; font-weight: 500;" onmouseover="if(!this.classList.contains('active')) { this.style.background='rgba(30, 41, 59, 1)'; this.style.color='rgb(52, 211, 153)'; }" onmouseout="updateMenuItemStyle(this)">
                             <span class="nav-icon" aria-hidden="true">
@@ -68,7 +71,7 @@
                                     <line x1="9.17" y1="9.17" x2="4.93" y2="4.93"/>
                                 </svg>
                             </span>
-                            <span>Settings</span>
+                            <span data-i18n="settings">Settings</span>
                         </button>
                     </nav>
                     <!-- Footer -->
@@ -81,7 +84,7 @@
                 <div id="design-panel" class="panel design-panel hidden">
                     <!-- Header -->
                     <div class="panel-header" style="padding: 1.5rem; border-bottom: 1px solid rgba(16, 185, 129, 0.3);">
-                        <h3 style="color: rgb(52, 211, 153); font-size: 1.3rem; font-weight: 600; margin: 0;">Design Concept</h3>
+                        <h3 style="color: rgb(52, 211, 153); font-size: 1.3rem; font-weight: 600; margin: 0;" data-i18n="design-concept">Design Concept</h3>
                     </div>
                     <!-- Content -->
                     <div class="panel-content" style="flex: 1; padding: 1.5rem; display: flex; flex-direction: column; gap: 2rem; overflow-y: auto;">
@@ -93,14 +96,14 @@
                                         <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
                                     </svg>
                                 </div>
-                                <h4 style="color: rgb(110, 231, 183); font-size: 1.2rem; font-weight: 600; margin: 0;">Vision & Mission</h4>
+                                <h4 style="color: rgb(110, 231, 183); font-size: 1.2rem; font-weight: 600; margin: 0;" data-i18n="vision-mission">Vision & Mission</h4>
                             </div>
                             <div style="padding-left: 1rem; border-left: 2px solid rgba(16, 185, 129, 0.3);">
                                 <p style="color: var(--text-slate-300); margin-bottom: 0.75rem; line-height: 1.6;">
-                                    <strong style="color: rgb(52, 211, 153);">Vision:</strong> To create an interactive, accessible platform that empowers citizens and policymakers to understand and engage with urban data in The Hague.
+                                    <strong style="color: rgb(52, 211, 153);">Vision</strong><br>To create an interactive urban interface that bridges digital city data and the physical city, enabling people to explore and understand The Hague's urban challenges through hands-on, spatial interaction.
                                 </p>
                                 <p style="color: var(--text-slate-300); line-height: 1.6;">
-                                    <strong style="color: rgb(52, 211, 153);">Mission:</strong> We democratize city data through intuitive 3D visualization, enabling data-driven decisions for a more sustainable, livable, and inclusive city.
+                                    <strong style="color: rgb(52, 211, 153);">Mission</strong><br>We translate complex municipal and geospatial data into an intuitive, interactive system using tablet-based controls and large-scale projection mapping on a 3D city model.<br>By allowing users to toggle, compare, and layer urban data in real time, the project supports discussion, exploration, and public engagement around mobility, climate, infrastructure, and liveability in The Hague.
                                 </p>
                             </div>
                         </div>
@@ -121,6 +124,9 @@
                                 </div>
                                 <div class="team-item" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border-radius: 0.75rem; border: 1px solid rgba(16, 185, 129, 0.2);">
                                     <p style="color: var(--text-slate-200); margin: 0;">The Hague University</p>
+                                </div>
+                                <div class="team-item" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border-radius: 0.75rem; border: 1px solid rgba(16, 185, 129, 0.2);">
+                                    <p style="color: var(--text-slate-200); margin: 0;">Innovative Data Visualisation – Minor Group B</p>
                                 </div>
                                 <div class="team-item" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border-radius: 0.75rem; border: 1px solid rgba(16, 185, 129, 0.2);">
                                     <p style="color: var(--text-slate-200); margin: 0;">Datalab Den Haag</p>
@@ -173,7 +179,7 @@
                     <!-- Header -->
                     <div class="panel-header" style="padding: 1.5rem; border-bottom: 1px solid rgba(16, 185, 129, 0.3);">
                         <h3 style="color: rgb(52, 211, 153); font-size: 1.3rem; font-weight: 600; margin: 0 0 0.5rem 0;">City Data Layers</h3>
-                        <p style="color: #90A1B9; font-size: 0.875rem; margin: 0;">Toggle layers to visualize city data</p>
+                        <p style="color: #90A1B9; font-size: 0.875rem; margin: 0;" data-i18n="toggle-layers-subtitle">Toggle layers to visualize city data</p>
                     </div>
                     <!-- Layers List -->
                     <div class="layers-list" style="flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
@@ -182,7 +188,7 @@
                                 <!-- Update 'warning-icon.png' with your actual warning icon image filename -->
                                 <img src="assets/images/warning-icon.png" alt="Traffic Warning" class="layer-icon" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0; object-fit: contain; image-rendering: pixelated;">
                                 <div style="flex: 1; min-width: 0;">
-                                    <button class="layer-label" onclick="selectLayer('traffic')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))">Traffic Congestion & Dangerous Spots</button>
+                                    <button class="layer-label" onclick="selectLayer('traffic')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))" data-i18n="traffic-congestion">Traffic Congestion & Dangerous Spots</button>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                         <label class="switch" style="position: relative; display: inline-block; width: 2.75rem; height: 1.5rem;">
                                             <input type="checkbox" onchange="toggleLayer('traffic', this.checked)" style="opacity: 0; width: 0; height: 0;">
@@ -198,7 +204,7 @@
                                 <!-- Update 'construction-icon.png' with your actual construction icon image filename -->
                                 <img src="assets/images/construction-icon.png" alt="Construction" class="layer-icon" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0; object-fit: contain; image-rendering: pixelated;">
                                 <div style="flex: 1; min-width: 0;">
-                                    <button class="layer-label" onclick="selectLayer('construction')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))">Construction & Road Closures</button>
+                                    <button class="layer-label" onclick="selectLayer('construction')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))" data-i18n="construction-road">Construction & Road Closures</button>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                         <label class="switch" style="position: relative; display: inline-block; width: 2.75rem; height: 1.5rem;">
                                             <input type="checkbox" onchange="toggleLayer('construction', this.checked)" style="opacity: 0; width: 0; height: 0;">
@@ -214,7 +220,7 @@
                                 <!-- Update 'heat-icon.png' with your actual heat/thermometer icon image filename -->
                                 <img src="assets/images/heat-icon.png" alt="Heat Stress" class="layer-icon" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0; object-fit: contain; image-rendering: pixelated;">
                                 <div style="flex: 1; min-width: 0;">
-                                    <button class="layer-label" onclick="selectLayer('heat')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))">Heat Stress</button>
+                                    <button class="layer-label" onclick="selectLayer('heat')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))" data-i18n="heat-stress">Heat Stress</button>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                         <label class="switch" style="position: relative; display: inline-block; width: 2.75rem; height: 1.5rem;">
                                             <input type="checkbox" onchange="toggleLayer('heat', this.checked)" style="opacity: 0; width: 0; height: 0;">
@@ -230,7 +236,7 @@
                                 <!-- Update 'transport-icon.png' with your actual transport/vehicle icon image filename -->
                                 <img src="assets/images/transport-icon.png" alt="Public Transport" class="layer-icon" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0; object-fit: contain; image-rendering: pixelated;">
                                 <div style="flex: 1; min-width: 0;">
-                                    <button class="layer-label" onclick="selectLayer('transport')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))">Public Transport Network</button>
+                                    <button class="layer-label" onclick="selectLayer('transport')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))" data-i18n="public-transport">Public Transport Network</button>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                         <label class="switch" style="position: relative; display: inline-block; width: 2.75rem; height: 1.5rem;">
                                             <input type="checkbox" onchange="toggleLayer('transport', this.checked)" style="opacity: 0; width: 0; height: 0;">
@@ -246,7 +252,7 @@
                                 <!-- Update 'green-icon.png' with your actual green spaces/trees icon image filename -->
                                 <img src="assets/images/green-icon.png" alt="Green Spaces & Trees" class="layer-icon" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0; object-fit: contain; image-rendering: pixelated;">
                                 <div style="flex: 1; min-width: 0;">
-                                    <button class="layer-label" onclick="selectLayer('green')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))">Green Spaces & Trees</button>
+                                    <button class="layer-label" onclick="selectLayer('green')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))" data-i18n="green-spaces">Green Spaces & Trees</button>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                         <label class="switch" style="position: relative; display: inline-block; width: 2.75rem; height: 1.5rem;">
                                             <input type="checkbox" onchange="toggleLayer('green', this.checked)" style="opacity: 0; width: 0; height: 0;">
@@ -262,7 +268,7 @@
                                 <!-- Update 'demographics-icon.png' with your actual demographics/people icon image filename -->
                                 <img src="assets/images/demographics-icon.png" alt="Demographics" class="layer-icon" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0; object-fit: contain; image-rendering: pixelated;">
                                 <div style="flex: 1; min-width: 0;">
-                                    <button class="layer-label" onclick="selectLayer('demographics')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))">Demographics</button>
+                                    <button class="layer-label" onclick="selectLayer('demographics')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))" data-i18n="demographics">Demographics</button>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                         <label class="switch" style="position: relative; display: inline-block; width: 2.75rem; height: 1.5rem;">
                                             <input type="checkbox" onchange="toggleLayer('demographics', this.checked)" style="opacity: 0; width: 0; height: 0;">
@@ -278,7 +284,7 @@
                                 <!-- Update 'noise-icon.png' with your actual noise/speaker icon image filename -->
                                 <img src="assets/images/noise-icon.png" alt="Noise Pollution" class="layer-icon" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0; object-fit: contain; image-rendering: pixelated;">
                                 <div style="flex: 1; min-width: 0;">
-                                    <button class="layer-label" onclick="selectLayer('noise')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))">Noise Pollution</button>
+                                    <button class="layer-label" onclick="selectLayer('noise')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))" data-i18n="noise-pollution">Noise Pollution</button>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                         <label class="switch" style="position: relative; display: inline-block; width: 2.75rem; height: 1.5rem;">
                                             <input type="checkbox" onchange="toggleLayer('noise', this.checked)" style="opacity: 0; width: 0; height: 0;">
@@ -292,7 +298,7 @@
                     </div>
                     <!-- Footer -->
                     <div class="panel-footer" style="padding: 1rem; border-top: 1px solid rgba(16, 185, 129, 0.3);">
-                        <button class="clear-button" onclick="clearAllLayers()" style="width: 100%; padding: 0.75rem; background: transparent; border: 1px solid rgba(16, 185, 129, 0.5); border-radius: 0.5rem; color: rgb(52, 211, 153); font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(16, 185, 129, 0.1)'" onmouseout="this.style.background='transparent'">Clear All Layers</button>
+                        <button class="clear-button" onclick="clearAllLayers()" style="width: 100%; padding: 0.75rem; background: transparent; border: 1px solid rgba(16, 185, 129, 0.5); border-radius: 0.5rem; color: rgb(52, 211, 153); font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(16, 185, 129, 0.1)'" onmouseout="this.style.background='transparent'" data-i18n="clear-all-layers">Clear All Layers</button>
                     </div>
                 </div>
 
@@ -310,7 +316,7 @@
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1.25rem; height: 1.25rem; color: rgb(52, 211, 153);">
                                     <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
                                 </svg>
-                                <h4 style="color: rgb(110, 231, 183); font-size: 1.1rem; font-weight: 600; margin: 0;">Language</h4>
+                                <h4 style="color: rgb(110, 231, 183); font-size: 1.1rem; font-weight: 600; margin: 0;" data-i18n="language">Language</h4>
                             </div>
                             <div style="display: flex; gap: 0.75rem;">
                                 <button class="lang-button" onclick="setLanguage('en')" style="flex: 1; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s; border: 1px solid rgba(16, 185, 129, 0.5); background: rgb(16, 185, 129); color: rgb(15, 23, 42);">English</button>
@@ -320,7 +326,7 @@
 
                         <!-- Accessibility -->
                         <div style="display: flex; flex-direction: column; gap: 1rem; padding-top: 1.5rem; border-top: 1px solid rgba(16, 185, 129, 0.2);">
-                            <h4 style="color: rgb(110, 231, 183); font-size: 1.1rem; font-weight: 600; margin: 0;">Accessibility</h4>
+                            <h4 style="color: rgb(110, 231, 183); font-size: 1.1rem; font-weight: 600; margin: 0;" data-i18n="accessibility">Accessibility</h4>
                             
                             <!-- Text Size -->
                             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
@@ -328,7 +334,7 @@
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1.25rem; height: 1.25rem; color: rgb(52, 211, 153);">
                                         <polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>
                                     </svg>
-                                    <span style="color: var(--text-slate-300);">Text Size</span>
+                                    <span style="color: var(--text-slate-300);" data-i18n="text-size">Text Size</span>
                                 </div>
                                 <div style="padding-left: 2rem; display: flex; flex-direction: column; gap: 0.5rem;">
                                     <input type="range" class="text-slider" id="text-size-slider" min="12" max="24" value="16" oninput="setTextSize(this.value)" style="width: 100%; height: 0.375rem; border-radius: 0.25rem; background: rgba(51, 65, 85, 0.5); outline: none; -webkit-appearance: none; appearance: none;">
@@ -346,11 +352,11 @@
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1.25rem; height: 1.25rem; color: rgb(52, 211, 153);">
                                         <circle cx="12" cy="12" r="10"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>
                                     </svg>
-                                    <span style="color: var(--text-slate-300);">High Contrast</span>
+                                    <span style="color: var(--text-slate-300);" data-i18n="high-contrast">High Contrast</span>
                                 </div>
                                 <label class="switch" style="position: relative; display: inline-block; width: 2.75rem; height: 1.5rem;">
                                     <input type="checkbox" id="high-contrast-switch" onchange="setHighContrast(this.checked)" style="opacity: 0; width: 0; height: 0;">
-                                    <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(51, 65, 85, 0.5); transition: 0.3s; border-radius: 1.5rem;"></span>
+                                    <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; transition: 0.3s; border-radius: 1.5rem;"></span>
                                 </label>
                             </div>
 
@@ -360,11 +366,11 @@
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1.25rem; height: 1.25rem; color: rgb(52, 211, 153);">
                                         <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
                                     </svg>
-                                    <span style="color: var(--text-slate-300);">Sound Effects</span>
+                                    <span style="color: var(--text-slate-300);" data-i18n="sound-effects">Sound Effects</span>
                                 </div>
                                 <label class="switch" style="position: relative; display: inline-block; width: 2.75rem; height: 1.5rem;">
                                     <input type="checkbox" id="sound-switch" checked onchange="setSoundEnabled(this.checked)" style="opacity: 0; width: 0; height: 0;">
-                                    <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgb(16, 185, 129); transition: 0.3s; border-radius: 1.5rem;"></span>
+                                    <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; transition: 0.3s; border-radius: 1.5rem;"></span>
                                 </label>
                             </div>
                         </div>
@@ -375,7 +381,7 @@
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1.25rem; height: 1.25rem; color: rgb(52, 211, 153);">
                                     <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
                                 </svg>
-                                <h4 style="color: rgb(110, 231, 183); font-size: 1.1rem; font-weight: 600; margin: 0;">Data Source & Credits</h4>
+                                <h4 style="color: rgb(110, 231, 183); font-size: 1.1rem; font-weight: 600; margin: 0;" data-i18n="data-source-credits">Data Source & Credits</h4>
                             </div>
                             <div style="padding-left: 2rem; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.875rem; color: var(--text-slate-400);">
                                 <p style="margin: 0;">Data provided by:</p>
@@ -385,7 +391,7 @@
                                     <li>CBS (Statistics Netherlands)</li>
                                     <li>OpenStreetMap Contributors</li>
                                 </ul>
-                                <p style="margin: 0; padding-top: 0.5rem; font-size: 0.75rem; color: var(--text-slate-500);">Last updated: November 2025</p>
+                                <p style="margin: 0; padding-top: 0.5rem; font-size: 0.75rem; color: var(--text-slate-500);"><span data-i18n="last-updated">Last updated:</span> November 2025</p>
                             </div>
                         </div>
 
@@ -395,7 +401,7 @@
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1rem; height: 1rem;">
                                     <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
                                 </svg>
-                                Reset All Settings
+                                <span data-i18n="reset-all-settings">Reset All Settings</span>
                             </button>
                         </div>
                     </div>
@@ -1003,6 +1009,80 @@
         let currentLanguage = 'en';
         let selectedLayer = null;
 
+        // ============================================
+        // Translation Dictionary (i18n)
+        // ============================================
+        const i18n = {
+            en: {
+                // Sidebar
+                'design-concept': 'Design Concept',
+                'city-data-layers': 'City Data Layers',
+                'settings': 'Settings',
+                // Panels / Headings
+                'vision-mission': 'Vision & Mission',
+                'city-data-layers-heading': 'City Data Layers',
+                'toggle-layers-subtitle': 'Toggle layers to visualize city data',
+                // Settings
+                'language': 'Language',
+                'accessibility': 'Accessibility',
+                'text-size': 'Text Size',
+                'adjust-text-size': 'Adjust interface text size',
+                'high-contrast': 'High Contrast',
+                'increase-contrast': 'Increase contrast of colours',
+                'sound-effects': 'Sound Effects',
+                'play-feedback-sounds': 'Play feedback sounds on interaction',
+                'data-source-credits': 'Data Source & Credits',
+                'last-updated': 'Last updated:',
+                // Buttons
+                'clear-all-layers': 'Clear All Layers',
+                'reset-all-settings': 'Reset All Settings',
+                // Empty detail text
+                'select-layer-detail': 'Select a layer on the left to see detailed information and maps here.',
+                // Layer labels (optional but included)
+                'traffic-congestion': 'Traffic Congestion & Dangerous Spots',
+                'construction-road': 'Construction & Road Closures',
+                'heat-stress': 'Heat Stress',
+                'public-transport': 'Public Transport Network',
+                'green-spaces': 'Green Spaces & Trees',
+                'demographics': 'Demographics',
+                'noise-pollution': 'Noise Pollution'
+            },
+            nl: {
+                // Sidebar
+                'design-concept': 'Ontwerpconcept',
+                'city-data-layers': 'Stadsdatalagen',
+                'settings': 'Instellingen',
+                // Panels / Headings
+                'vision-mission': 'Visie & Missie',
+                'city-data-layers-heading': 'Stadsdatalagen',
+                'toggle-layers-subtitle': 'Schakel lagen in om stadsdata te visualiseren',
+                // Settings
+                'language': 'Taal',
+                'accessibility': 'Toegankelijkheid',
+                'text-size': 'Tekstgrootte',
+                'adjust-text-size': 'Pas de tekstgrootte aan',
+                'high-contrast': 'Hoog contrast',
+                'increase-contrast': 'Verhoog het kleurcontrast',
+                'sound-effects': 'Geluidseffecten',
+                'play-feedback-sounds': 'Speel geluiden af bij interactie',
+                'data-source-credits': 'Databronnen & Credits',
+                'last-updated': 'Laatst bijgewerkt:',
+                // Buttons
+                'clear-all-layers': 'Wis alle lagen',
+                'reset-all-settings': 'Reset alle instellingen',
+                // Empty detail text
+                'select-layer-detail': 'Selecteer links een laag om hier details en kaarten te zien.',
+                // Layer labels
+                'traffic-congestion': 'Verkeerscongestie & Gevaarlijke Plekken',
+                'construction-road': 'Bouw & Wegafsluitingen',
+                'heat-stress': 'Hittestress',
+                'public-transport': 'Openbaar Vervoer Netwerk',
+                'green-spaces': 'Groene Ruimtes & Bomen',
+                'demographics': 'Demografie',
+                'noise-pollution': 'Geluidsoverlast'
+            }
+        };
+
         // Google Maps Base Component
         class GoogleMapBase {
             constructor(containerId, options = {}) {
@@ -1317,6 +1397,96 @@
         // ============================================
         
         // ============================================
+        // Audio Manager for Layer Sound Effects
+        // ============================================
+        
+        // Sound state tracking
+        let soundEnabled = true; // Default to enabled (matches Settings default)
+        
+        // Create Audio objects for layer sounds
+        // Note: Audio files are in assets/soundeffect/ (existing folder structure)
+        const trafficAudio = new Audio("assets/soundeffect/trafficsound.mp3");
+        const natureAudio = new Audio("assets/soundeffect/naturesound.mp3");
+        
+        // Configure audio properties
+        trafficAudio.loop = true;
+        trafficAudio.volume = 0.35;
+        natureAudio.loop = true;
+        natureAudio.volume = 0.35;
+        
+        // Map layer IDs to their corresponding audio objects
+        const layerAudioMap = {
+            'traffic': trafficAudio,    // Traffic Congestion & Dangerous Spots
+            'green': natureAudio       // Green Spaces & Trees
+        };
+        
+        /**
+         * Start playing a sound for a specific layer
+         * @param {string} layerId - The layer ID ('traffic' or 'green')
+         */
+        function startSound(layerId) {
+            // Only play if sound is enabled
+            if (!soundEnabled) {
+                return;
+            }
+            
+            const audio = layerAudioMap[layerId];
+            if (!audio) {
+                return; // No sound for this layer
+            }
+            
+            // Handle browser autoplay restrictions
+            // Since this is triggered by user interaction (toggle), it should work
+            audio.play().catch(err => {
+                console.warn(`[Audio] Play blocked for ${layerId}:`, err);
+            });
+        }
+        
+        /**
+         * Stop playing a sound for a specific layer
+         * @param {string} layerId - The layer ID ('traffic' or 'green')
+         */
+        function stopSound(layerId) {
+            const audio = layerAudioMap[layerId];
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0; // Reset to beginning
+            }
+        }
+        
+        /**
+         * Stop all currently playing sounds
+         */
+        function stopAllSounds() {
+            Object.values(layerAudioMap).forEach(audio => {
+                audio.pause();
+                audio.currentTime = 0;
+            });
+        }
+        
+        /**
+         * Sync sounds with current layer state
+         * Called when Sound Effects is turned ON to resume sounds for layers that are currently enabled
+         */
+        function syncSoundsWithLayerState() {
+            if (!soundEnabled) {
+                return; // Don't sync if sound is disabled
+            }
+            
+            // Check each layer that has a sound
+            Object.keys(layerAudioMap).forEach(layerId => {
+                const layerItem = document.querySelector(`[data-layer="${layerId}"]`);
+                if (layerItem && layerItem.classList.contains('enabled')) {
+                    // Layer is ON, start its sound
+                    startSound(layerId);
+                } else {
+                    // Layer is OFF, ensure sound is stopped
+                    stopSound(layerId);
+                }
+            });
+        }
+        
+        // ============================================
         // Projection Map Window Control
         // ============================================
         
@@ -1629,6 +1799,12 @@
                         window.TransportRealtime.startUpdates();
                     }
                 }
+                
+                // Sound effects: Start sound for this layer if sound is enabled
+                // Only traffic and green layers have sounds
+                if (soundEnabled && (layerId === 'traffic' || layerId === 'green')) {
+                    startSound(layerId);
+                }
             } else {
                 layerItem.classList.remove('enabled');
                 if (status) status.textContent = 'OFF';
@@ -1642,6 +1818,11 @@
                     if (window.TransportPlanner) {
                         window.TransportPlanner.cleanup();
                     }
+                }
+                
+                // Sound effects: Stop sound for this layer
+                if (layerId === 'traffic' || layerId === 'green') {
+                    stopSound(layerId);
                 }
             }
             
@@ -1714,6 +1895,9 @@
                 window.TransportPlanner.cleanup();
             }
             
+            // Stop all layer sounds
+            stopAllSounds();
+            
             document.querySelectorAll('.layer-item').forEach(item => {
                 item.classList.remove('enabled', 'selected');
                 const checkbox = item.querySelector('input[type="checkbox"]');
@@ -1725,8 +1909,39 @@
             selectLayer(null);
         }
 
+        /**
+         * Apply translations to all elements with data-i18n attributes
+         * @param {string} lang - Language code ('en' or 'nl')
+         */
+        function applyTranslations(lang) {
+            const translations = i18n[lang] || i18n.en;
+            
+            // Find all elements with data-i18n attribute
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                const translation = translations[key];
+                
+                if (translation) {
+                    // For buttons with nested spans, update the span
+                    if (element.tagName === 'BUTTON' && element.querySelector('span[data-i18n]')) {
+                        const span = element.querySelector('span[data-i18n]');
+                        if (span.getAttribute('data-i18n') === key) {
+                            span.textContent = translation;
+                        }
+                    } else {
+                        // For all other elements, update textContent directly
+                        element.textContent = translation;
+                    }
+                }
+            });
+        }
+
         function setLanguage(lang) {
             currentLanguage = lang;
+            
+            // Apply translations to all UI elements
+            applyTranslations(lang);
+            
             // Update button styles
             document.querySelectorAll('.lang-button').forEach(btn => {
                 btn.classList.remove('active');
@@ -1881,7 +2096,22 @@
         }
 
         function setSoundEnabled(enabled) {
-            // Sound settings logic
+            // Update sound state
+            soundEnabled = enabled;
+            
+            // Update the checkbox UI
+            const soundSwitch = document.getElementById('sound-switch');
+            if (soundSwitch) {
+                soundSwitch.checked = enabled;
+            }
+            
+            if (enabled) {
+                // Sound Effects turned ON: Resume sounds for layers that are currently enabled
+                syncSoundsWithLayerState();
+            } else {
+                // Sound Effects turned OFF: Stop all sounds immediately
+                stopAllSounds();
+            }
         }
 
         function resetAllSettings() {
@@ -2013,6 +2243,9 @@
 
         // Initialize construction projects on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Apply initial translations based on current language
+            applyTranslations(currentLanguage);
+            
             const currentMonth = (2025 - BASE_YEAR) * 12 + 5; // Jun 2025
             updateConstructionTimeline(currentMonth);
             initializeDemographics();
@@ -2953,7 +3186,8 @@
         }
 
         // Transport Layer Data
-        const transportStops = [
+        // Make transportStops globally accessible for transport-planner.js
+        window.transportStops = [
             { id: 1, name: { en: 'Centraal Station', nl: 'Centraal Station' }, type: 'train', lines: ['1', '9', '16'], passengers: { en: '15,000/day', nl: '15.000/dag' }, position: { lat: 52.080, lng: 4.323 } },
             { id: 2, name: { en: 'Scheveningen Pier', nl: 'Scheveningen Pier' }, type: 'tram', lines: ['1', '9'], passengers: { en: '8,500/day', nl: '8.500/dag' }, position: { lat: 52.105, lng: 4.278 } },
             { id: 3, name: { en: 'Grote Markt', nl: 'Grote Markt' }, type: 'tram', lines: ['1', '16'], passengers: { en: '12,000/day', nl: '12.000/dag' }, position: { lat: 52.077, lng: 4.311 } },
@@ -2969,9 +3203,10 @@
         ];
 
         let selectedTransportStop = null;
-        let filteredTransportStops = [...transportStops];
+        let filteredTransportStops = [...window.transportStops];
 
-        function getTransportTypeIcon(type) {
+        // Make helper functions globally accessible for transport-planner.js
+        window.getTransportTypeIcon = function getTransportTypeIcon(type) {
             switch (type) {
                 case 'train':
                     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 2rem; height: 2rem; color: rgb(234, 179, 8);">
@@ -2992,7 +3227,7 @@
             }
         }
 
-        function getTransportTypeColor(type) {
+        window.getTransportTypeColor = function getTransportTypeColor(type) {
             switch (type) {
                 case 'train': return { color: 'rgb(234, 179, 8)', strokeColor: 'rgb(202, 138, 4)' };
                 case 'tram': return { color: 'rgb(59, 130, 246)', strokeColor: 'rgb(37, 99, 235)' };
@@ -3003,7 +3238,7 @@
 
         function filterTransportStops(query) {
             const searchQuery = query.toLowerCase();
-            filteredTransportStops = transportStops.filter(stop => {
+            filteredTransportStops = window.transportStops.filter(stop => {
                 const nameMatch = stop.name[currentLanguage].toLowerCase().includes(searchQuery);
                 const linesMatch = stop.lines.some(line => line.toLowerCase().includes(searchQuery));
                 return nameMatch || linesMatch;
@@ -3014,18 +3249,62 @@
         // Route planning handler
         function handleRoutePlanning() {
             const destinationInput = document.getElementById('transport-destination-search');
+            if (!destinationInput) {
+                console.error('[Route Planning] Destination input element not found');
+                return;
+            }
+            
             const destination = destinationInput.value.trim();
             
             if (!destination) {
-                alert('Please enter a destination address or place name.');
+                // Use non-blocking message instead of alert
+                const displayElement = document.getElementById('route-plan-display');
+                if (displayElement) {
+                    displayElement.innerHTML = `
+                        <div style="padding: 1rem; background: rgba(234, 179, 8, 0.1); border: 2px solid rgba(234, 179, 8, 0.5); border-radius: 0.75rem; margin-bottom: 1rem;">
+                            <p style="color: rgb(234, 179, 8); margin: 0; font-size: 0.875rem;">Please enter a destination address or place name.</p>
+                        </div>
+                    `;
+                    displayElement.style.display = 'block';
+                } else {
+                    alert('Please enter a destination address or place name.');
+                }
                 return;
             }
 
-            if (window.TransportPlanner) {
+            // Debug logging
+            console.log('[Route Planning] Attempting to plan route to:', destination);
+            console.log('[Route Planning] TransportPlanner available:', !!window.TransportPlanner);
+            console.log('[Route Planning] Google Maps available:', typeof google !== 'undefined');
+            if (typeof google !== 'undefined' && google.maps) {
+                console.log('[Route Planning] DirectionsService available:', !!google.maps.DirectionsService);
+                console.log('[Route Planning] DirectionsRenderer available:', !!google.maps.DirectionsRenderer);
+            }
+
+            if (window.TransportPlanner && typeof window.TransportPlanner.planRoute === 'function') {
                 window.TransportPlanner.planRoute(destination);
             } else {
-                console.error('TransportPlanner not available');
-                alert('Route planning is not available. Please refresh the page.');
+                console.error('[Route Planning] TransportPlanner not available or planRoute method missing');
+                console.error('[Route Planning] This may be due to:');
+                console.error('  1. transport-planner.js not loaded');
+                console.error('  2. Google Maps API not loaded with directions library');
+                console.error('  3. API key restrictions blocking the request');
+                console.error('  4. Script loading order issue');
+                
+                // Show non-blocking error message
+                const displayElement = document.getElementById('route-plan-display');
+                if (displayElement) {
+                    displayElement.innerHTML = `
+                        <div style="padding: 1rem; background: rgba(239, 68, 68, 0.1); border: 2px solid rgba(239, 68, 68, 0.5); border-radius: 0.75rem; margin-bottom: 1rem;">
+                            <p style="color: rgb(248, 113, 113); margin: 0 0 0.5rem 0; font-size: 0.875rem; font-weight: 600;">Route planning is not available</p>
+                            <p style="color: rgb(248, 113, 113); margin: 0; font-size: 0.75rem;">Please check your internet connection and refresh the page. If the problem persists, the Google Maps API key may need to be configured for this domain.</p>
+                        </div>
+                    `;
+                    displayElement.style.display = 'block';
+                } else {
+                    // Fallback to alert only if display element doesn't exist
+                    alert('Route planning is not available. Please refresh the page.');
+                }
             }
         }
 
@@ -3064,7 +3343,7 @@
                 document.getElementById('transport-stop-details').classList.add('hidden');
             } else {
                 selectedTransportStop = stopId;
-                const stop = transportStops.find(s => s.id === stopId);
+                const stop = window.transportStops.find(s => s.id === stopId);
                 if (stop) {
                     const lang = currentLanguage;
                     document.getElementById('transport-stop-icon').innerHTML = getTransportTypeIcon(stop.type);
@@ -3119,14 +3398,31 @@
                     }
 
                     // Initialize Transport Planner (nearby stops & route planning)
-                    if (window.TransportPlanner) {
-                        window.TransportPlanner.init(map);
+                    // Wait a bit to ensure transport-planner.js has loaded and Google Maps is ready
+                    if (window.TransportPlanner && typeof window.TransportPlanner.init === 'function') {
+                        // Initialize asynchronously to ensure Google Maps is fully ready
+                        setTimeout(() => {
+                            window.TransportPlanner.init(map);
+                        }, 100);
                     } else {
-                        console.warn('TransportPlanner module not loaded. Make sure transport-planner.js is included.');
+                        console.warn('[Transport Layer] TransportPlanner module not loaded. Make sure transport-planner.js is included.');
+                        console.warn('[Transport Layer] Retrying initialization in 1 second...');
+                        // Retry after a delay in case script is still loading
+                        setTimeout(() => {
+                            if (window.TransportPlanner && typeof window.TransportPlanner.init === 'function') {
+                                window.TransportPlanner.init(map);
+                            } else {
+                                console.error('[Transport Layer] TransportPlanner failed to load after retry. Check:');
+                                console.error('  1. js/transport-planner.js file exists');
+                                console.error('  2. Script tag in index.html is correct');
+                                console.error('  3. No JavaScript errors preventing script execution');
+                                console.error('  4. Google Maps API loaded with directions library');
+                            }
+                        }, 1000);
                     }
 
                     // Add transport stop markers (static stops) - these are now supplemented by nearby stops
-                    transportStops.forEach(stop => {
+                    window.transportStops.forEach(stop => {
                         const colors = getTransportTypeColor(stop.type);
                         const marker = mapInstances['transport'].addMarker({
                             position: stop.position,
@@ -3433,7 +3729,7 @@
             
             container.innerHTML = '';
             
-            const stopsToRender = filteredTransportStops.length > 0 ? filteredTransportStops : transportStops;
+            const stopsToRender = filteredTransportStops.length > 0 ? filteredTransportStops : window.transportStops;
             const lang = currentLanguage;
             
             stopsToRender.forEach((stop) => {
