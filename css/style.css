@@ -1870,3 +1870,9 @@ body {
   }
 }
 
+
+/* Leaflet map: zoom buttons sit above the locate-me button */
+.leaflet-bottom.leaflet-right .leaflet-control-zoom {
+  margin-right: 1.6rem;
+  margin-bottom: 5.5rem;
+}

@@ -4,15 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Den Haag in 3D</title>
-    <link rel="stylesheet" href="css/style.css">
-    <!-- Google Maps API with required libraries for route planning -->
-    <!-- Libraries: geometry (for calculations), drawing (for map interactions), places (for autocomplete), directions (for route planning) -->
-    <!-- IMPORTANT: For GitHub Pages deployment, ensure API key restrictions allow: https://jae126.github.io/* -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDOQBspPPUzGmXqi8lG18Jg5idvksDm6x0&libraries=geometry,drawing,places,directions&language=en"></script>
-    <!-- Public Transport Real-time Handler -->
-    <script src="js/transport.js"></script>
-    <!-- Public Transport Planner (Route Planning & Nearby Stops) -->
-    <script src="js/transport-planner.js"></script>
+    <link rel="stylesheet" href="css/style.css?v=4">
+    <!-- Free map: Leaflet + OpenStreetMap (no API key needed) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <!-- Public Transport Planner (Nearby Stops & Route Search) -->
+    <script src="js/transport-planner.js?v=3"></script>
 </head>
 <body>
     <!-- Welcome Screen -->
@@ -1100,23 +1097,22 @@
             }
         };
 
-        // Google Maps Base Component
+        // Map Base Component (Leaflet + OpenStreetMap, free, no API key)
+        // Keeps the same methods the layers already use: addMarker, addPolygon, addCircle, addPolyline
         class GoogleMapBase {
             constructor(containerId, options = {}) {
                 this.containerId = containerId;
                 this.map = null;
                 this.userLocation = null;
-                this.followMode = false;
-                this.watchId = null;
+                this.userMarker = null;
                 this.center = options.center || { lat: 52.0705, lng: 4.3007 };
                 this.zoom = options.zoom || 13;
                 this.showControls = options.showControls !== false;
-                this.borderColor = options.borderColor || 'rgba(59, 130, 246, 0.5)';
                 this.onMapLoad = options.onMapLoad || null;
                 this.markers = [];
                 this.polygons = [];
                 this.polylines = [];
-                
+
                 this.init();
             }
 
@@ -1126,276 +1122,142 @@
                     console.error(`Container ${this.containerId} not found`);
                     return;
                 }
-
-                // Wait for Google Maps API to load
-                if (typeof google === 'undefined' || !google.maps) {
-                    console.warn('Google Maps API not loaded yet, retrying...');
+                if (typeof L === 'undefined') {
                     setTimeout(() => this.init(), 100);
                     return;
                 }
 
-                // Create map container structure
                 container.innerHTML = '';
                 container.style.position = 'relative';
                 container.style.overflow = 'hidden';
-                
+
                 const mapDiv = document.createElement('div');
                 mapDiv.id = `${this.containerId}-map`;
-                mapDiv.style.width = '100%';
-                mapDiv.style.height = '100%';
+                mapDiv.style.cssText = 'position: relative; z-index: 1; width: 100%; height: 100%; background: #0f172a;';
                 container.appendChild(mapDiv);
 
-                // Create overlay container for children
                 const overlayDiv = document.createElement('div');
                 overlayDiv.id = `${this.containerId}-overlay`;
-                overlayDiv.style.position = 'absolute';
-                overlayDiv.style.inset = '0';
-                overlayDiv.style.pointerEvents = 'none';
-                overlayDiv.style.zIndex = '2';
+                overlayDiv.style.cssText = 'position: absolute; inset: 0; pointer-events: none; z-index: 2;';
                 container.appendChild(overlayDiv);
 
-                // Initialize map
-                this.map = new google.maps.Map(mapDiv, {
-                    center: this.center,
+                this.map = L.map(mapDiv, {
+                    center: [this.center.lat, this.center.lng],
                     zoom: this.zoom,
-                    styles: [
-                        {
-                            featureType: 'all',
-                            elementType: 'all',
-                            stylers: [{ saturation: -20 }, { lightness: -20 }]
-                        }
-                    ],
-                    disableDefaultUI: !this.showControls,
-                    zoomControl: this.showControls,
-                    mapTypeControl: false,
-                    streetViewControl: false,
-                    fullscreenControl: false,
-                    gestureHandling: 'greedy',
-                    scrollwheel: true,
-                    draggable: true
+                    zoomControl: false,
+                    attributionControl: true
                 });
+                // Zoom buttons bottom-right, above the locate button, so legends don't cover them
+                if (this.showControls) {
+                    L.control.zoom({ position: 'bottomright' }).addTo(this.map);
+                }
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank">CARTO</a>',
+                    subdomains: 'abcd',
+                    maxZoom: 19
+                }).addTo(this.map);
 
-                // Add click listener to disable follow mode
-                this.map.addListener('click', () => {
-                    this.setFollowMode(false);
-                });
+                // The panel may still be animating open; recalculate the size once it is visible
+                setTimeout(() => this.map && this.map.invalidateSize(), 250);
 
-                // Get initial user location
-                this.getUserLocation();
-
-                // Add locate me button if controls are enabled
                 if (this.showControls) {
                     this.addLocateMeButton();
                 }
 
-                // Call onMapLoad callback
                 // Run after the constructor returns so mapInstances[layer] is already assigned
                 if (this.onMapLoad) {
                     setTimeout(() => this.onMapLoad(this.map, this), 0);
                 }
             }
 
-            getUserLocation() {
-                if (!navigator.geolocation) return;
-
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        this.userLocation = {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude
-                        };
-                        this.addUserMarker();
-                    },
-                    (error) => {
-                        console.log('Geolocation error:', error);
-                    }
-                );
+            // Google-style shape options -> Leaflet style
+            toStyle(o = {}) {
+                return {
+                    color: o.strokeColor || '#FFFFFF',
+                    opacity: o.strokeOpacity !== undefined ? o.strokeOpacity : 1,
+                    weight: o.strokeWeight !== undefined ? o.strokeWeight : 2,
+                    fillColor: o.fillColor || o.strokeColor || '#3B82F6',
+                    fillOpacity: o.fillOpacity !== undefined ? o.fillOpacity : 0.3
+                };
             }
 
-            addUserMarker() {
-                if (!this.userLocation || !this.map) return;
-
-                // Remove existing user marker
-                if (this.userMarker) {
-                    this.userMarker.setMap(null);
-                }
-
-                this.userMarker = new google.maps.Marker({
-                    position: this.userLocation,
-                    map: this.map,
-                    icon: {
-                        path: google.maps.SymbolPath.CIRCLE,
-                        fillColor: '#3B82F6',
-                        fillOpacity: 1,
-                        strokeColor: '#FFFFFF',
-                        strokeWeight: 3,
-                        scale: 10
-                    }
-                });
+            // Let existing code keep calling shape.addListener('click', fn)
+            withListener(layer) {
+                layer.addListener = function(eventName, fn) { this.on(eventName, fn); return this; };
+                return layer;
             }
 
-            setFollowMode(enabled) {
-                this.followMode = enabled;
-                this.updateLocateMeButton();
-
-                if (enabled) {
-                    this.startWatchingLocation();
-                } else {
-                    this.stopWatchingLocation();
-                }
+            addMarker(options) {
+                if (!this.map || !options.position) return null;
+                const icon = options.icon || {};
+                const marker = L.circleMarker([options.position.lat, options.position.lng], {
+                    radius: icon.scale && icon.scale > 4 ? icon.scale : 9,
+                    color: icon.strokeColor || '#FFFFFF',
+                    weight: icon.strokeWeight !== undefined ? icon.strokeWeight : 2,
+                    fillColor: icon.fillColor || '#3B82F6',
+                    fillOpacity: icon.fillOpacity !== undefined ? icon.fillOpacity : 1
+                }).addTo(this.map);
+                marker._isDot = true;
+                if (options.title) marker.bindTooltip(options.title, { direction: 'top', offset: [0, -8] });
+                this.markers.push(marker);
+                return this.withListener(marker);
             }
 
-            startWatchingLocation() {
-                if (!navigator.geolocation || this.watchId !== null) return;
-
-                this.watchId = navigator.geolocation.watchPosition(
-                    (position) => {
-                        const newLocation = {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude
-                        };
-                        this.userLocation = newLocation;
-                        this.addUserMarker();
-
-                        if (this.map && this.followMode) {
-                            this.map.panTo(newLocation);
-                        }
-                    },
-                    (error) => {
-                        console.log('Geolocation error:', error);
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        maximumAge: 10000,
-                        timeout: 5000
-                    }
-                );
+            addPolygon(options) {
+                if (!this.map) return null;
+                const paths = (options.paths || []).map(p => [p.lat, p.lng]);
+                const polygon = L.polygon(paths, this.toStyle(options)).addTo(this.map);
+                this.polygons.push(polygon);
+                return this.withListener(polygon);
             }
 
-            stopWatchingLocation() {
-                if (this.watchId !== null) {
-                    navigator.geolocation.clearWatch(this.watchId);
-                    this.watchId = null;
-                }
+            addCircle(options) {
+                if (!this.map) return null;
+                const circle = L.circle([options.center.lat, options.center.lng], {
+                    ...this.toStyle(options),
+                    radius: options.radius
+                }).addTo(this.map);
+                this.polygons.push(circle);
+                return this.withListener(circle);
+            }
+
+            addPolyline(options) {
+                if (!this.map) return null;
+                const path = (options.path || []).map(p => [p.lat, p.lng]);
+                const polyline = L.polyline(path, this.toStyle(options)).addTo(this.map);
+                this.polylines.push(polyline);
+                return this.withListener(polyline);
             }
 
             handleLocateMe() {
-                if (this.userLocation && this.map) {
-                    this.map.panTo(this.userLocation);
-                    this.map.setZoom(15);
-                    this.setFollowMode(true);
-                } else if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            const location = {
-                                lat: position.coords.latitude,
-                                lng: position.coords.longitude
-                            };
-                            this.userLocation = location;
-                            this.addUserMarker();
-                            if (this.map) {
-                                this.map.panTo(location);
-                                this.map.setZoom(15);
-                            }
-                            this.setFollowMode(true);
-                        },
-                        (error) => {
-                            console.log('Geolocation error:', error);
-                        }
-                    );
-                }
+                if (!navigator.geolocation || !this.map) return;
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        this.userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
+                        if (this.userMarker) this.userMarker.remove();
+                        this.userMarker = L.circleMarker([this.userLocation.lat, this.userLocation.lng], {
+                            radius: 9, color: '#FFFFFF', weight: 3, fillColor: '#3B82F6', fillOpacity: 1
+                        }).addTo(this.map);
+                        this.map.flyTo([this.userLocation.lat, this.userLocation.lng], 15);
+                    },
+                    (error) => console.log('Geolocation error:', error)
+                );
             }
 
             addLocateMeButton() {
                 const container = document.getElementById(this.containerId);
                 if (!container) return;
-
                 const button = document.createElement('button');
                 button.id = `${this.containerId}-locate-btn`;
                 button.className = 'locate-me-btn';
+                button.setAttribute('aria-label', 'Show my location');
                 button.style.cssText = 'position: absolute; bottom: 1.5rem; right: 1.5rem; z-index: 10; width: 3rem; height: 3rem; border-radius: 50%; background: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transition: all 0.2s;';
                 button.onclick = () => this.handleLocateMe();
-                button.onmouseenter = () => {
-                    button.style.background = 'rgb(59, 130, 246)';
-                    button.style.transform = 'scale(1.05)';
-                };
-                button.onmouseleave = () => {
-                    if (!this.followMode) {
-                        button.style.background = 'white';
-                    }
-                    button.style.transform = 'scale(1)';
-                };
-
                 button.innerHTML = `
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1.25rem; height: 1.25rem; color: rgb(15, 23, 42);">
-                        <path d="M12 2v4M12 18v4M4 12H2m20 0h-2M6.34 6.34l-2.83 2.83m15.18 15.18l-2.83-2.83M17.66 6.34l2.83 2.83M4.93 19.07l2.83-2.83"/>
-                    </svg>
-                `;
-
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 1.25rem; height: 1.25rem; color: rgb(15, 23, 42);">
+                        <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/>
+                    </svg>`;
                 container.appendChild(button);
-                this.updateLocateMeButton();
-            }
-
-            updateLocateMeButton() {
-                const button = document.getElementById(`${this.containerId}-locate-btn`);
-                if (!button) return;
-
-                if (this.followMode) {
-                    button.style.background = 'rgb(59, 130, 246)';
-                    const svg = button.querySelector('svg');
-                    if (svg) {
-                        svg.style.color = 'white';
-                        svg.setAttribute('fill', 'currentColor');
-                    }
-                } else {
-                    button.style.background = 'white';
-                    const svg = button.querySelector('svg');
-                    if (svg) {
-                        svg.style.color = 'rgb(15, 23, 42)';
-                        svg.removeAttribute('fill');
-                    }
-                }
-            }
-
-            // Public methods for adding markers, polygons, etc.
-            addMarker(options) {
-                if (!this.map) return null;
-                const marker = new google.maps.Marker({
-                    ...options,
-                    map: this.map
-                });
-                this.markers.push(marker);
-                return marker;
-            }
-
-            addPolygon(options) {
-                if (!this.map) return null;
-                const polygon = new google.maps.Polygon({
-                    ...options,
-                    map: this.map
-                });
-                this.polygons.push(polygon);
-                return polygon;
-            }
-
-            addCircle(options) {
-                if (!this.map) return null;
-                const circle = new google.maps.Circle({
-                    ...options,
-                    map: this.map
-                });
-                this.polygons.push(circle);
-                return circle;
-            }
-
-            addPolyline(options) {
-                if (!this.map) return null;
-                const polyline = new google.maps.Polyline({
-                    ...options,
-                    map: this.map
-                });
-                this.polylines.push(polyline);
-                return polyline;
             }
 
             getOverlayContainer() {
@@ -1407,13 +1269,13 @@
             }
 
             destroy() {
-                this.stopWatchingLocation();
-                this.markers.forEach(m => m.setMap(null));
-                this.polygons.forEach(p => p.setMap(null));
-                this.polylines.forEach(pl => pl.setMap(null));
-                if (this.userMarker) {
-                    this.userMarker.setMap(null);
+                if (this.map) {
+                    this.map.remove();
+                    this.map = null;
                 }
+                this.markers = [];
+                this.polygons = [];
+                this.polylines = [];
             }
         }
 
@@ -1478,7 +1340,7 @@
         function registerMapShape(layer, id, shape) {
             if (!shape) return;
             if (!mapShapes[layer]) mapShapes[layer] = {};
-            mapShapes[layer][id] = { shape, base: { strokeWeight: shape.get('strokeWeight'), fillOpacity: shape.get('fillOpacity') } };
+            mapShapes[layer][id] = { shape, base: { weight: shape.options.weight, fillOpacity: shape.options.fillOpacity, radius: shape._isDot ? shape.getRadius() : null } };
         }
 
         // Draw an area as a circle at its MAP_LOCATIONS position
@@ -1501,15 +1363,20 @@
             Object.keys(shapes).forEach(key => {
                 const { shape, base } = shapes[key];
                 const active = id !== null && String(key) === String(id);
-                if (shape instanceof google.maps.Marker) {
-                    shape.setAnimation(active ? google.maps.Animation.BOUNCE : null);
-                    shape.setZIndex(active ? 1000 : null);
-                    if (active) setTimeout(() => shape.setAnimation(null), 1400);
+                if (shape._isDot) {
+                    shape.setRadius(active ? base.radius + 5 : base.radius);
+                    shape.setStyle({ weight: active ? 4 : base.weight });
                 } else {
-                    shape.setOptions({
-                        strokeWeight: active ? 4 : base.strokeWeight,
+                    shape.setStyle({
+                        weight: active ? 4 : base.weight,
                         fillOpacity: active ? Math.min((base.fillOpacity || 0.3) + 0.25, 0.7) : base.fillOpacity
                     });
+                }
+                if (active) {
+                    shape.bringToFront();
+                    if (shape.getTooltip()) shape.openTooltip(); 
+                } else if (shape.getTooltip()) {
+                    shape.closeTooltip();
                 }
             });
         }
@@ -1517,21 +1384,17 @@
         // Zoom the layer's map to a card's location (id null = back to the whole city)
         function focusMapOn(layer, id) {
             const inst = mapInstances[layer];
-            if (!inst || !inst.map || typeof google === 'undefined') return;
+            if (!inst || !inst.map) return;
             const loc = id === null ? null : getMapLocation(layer, id);
             if (!loc) {
-                inst.map.panTo(DEN_HAAG_CENTER);
-                inst.map.setZoom(12);
+                inst.map.flyTo([DEN_HAAG_CENTER.lat, DEN_HAAG_CENTER.lng], 12, { duration: 0.8 });
                 highlightMapShape(layer, null);
                 return;
             }
-            const center = { lat: loc.lat, lng: loc.lng };
             if (loc.r) {
-                const bounds = new google.maps.Circle({ center, radius: loc.r }).getBounds();
-                inst.map.fitBounds(bounds, 40);
+                inst.map.flyToBounds(L.latLng(loc.lat, loc.lng).toBounds(loc.r * 2), { padding: [40, 40], duration: 0.8 });
             } else {
-                inst.map.panTo(center);
-                inst.map.setZoom(loc.zoom || 16);
+                inst.map.flyTo([loc.lat, loc.lng], loc.zoom || 16, { duration: 0.8 });
             }
             highlightMapShape(layer, id);
             const container = document.getElementById(`${layer}-map-container`);
@@ -3441,7 +3304,7 @@
                     displayElement.innerHTML = `
                         <div style="padding: 1rem; background: rgba(239, 68, 68, 0.1); border: 2px solid rgba(239, 68, 68, 0.5); border-radius: 0.75rem; margin-bottom: 1rem;">
                             <p style="color: rgb(248, 113, 113); margin: 0 0 0.5rem 0; font-size: 0.875rem; font-weight: 600;">Route planning is not available</p>
-                            <p style="color: rgb(248, 113, 113); margin: 0; font-size: 0.75rem;">Please check your internet connection and refresh the page. If the problem persists, the Google Maps API key may need to be configured for this domain.</p>
+                            <p style="color: rgb(248, 113, 113); margin: 0; font-size: 0.75rem;">Please check your internet connection and refresh the page. If the problem persists, try again in a minute.</p>
                         </div>
                     `;
                     displayElement.style.display = 'block';
@@ -3453,21 +3316,10 @@
         }
 
         // Initialize Google Places Autocomplete for destination search
+        // Press Enter in the destination field to search
         function initDestinationAutocomplete() {
             const destinationInput = document.getElementById('transport-destination-search');
-            if (!destinationInput || typeof google === 'undefined' || !google.maps.places) {
-                // Retry if Google Maps not loaded yet
-                setTimeout(initDestinationAutocomplete, 500);
-                return;
-            }
-
-            const autocomplete = new google.maps.places.Autocomplete(destinationInput, {
-                types: ['geocode', 'establishment'],
-                componentRestrictions: { country: 'nl' }, // Restrict to Netherlands
-                fields: ['formatted_address', 'geometry', 'name']
-            });
-
-            // Allow Enter key to trigger route planning
+            if (!destinationInput) return;
             destinationInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -3572,7 +3424,7 @@
                         const marker = mapInstances['transport'].addMarker({
                             position: stop.position,
                             icon: {
-                                path: google.maps.SymbolPath.CIRCLE,
+                                path: 'circle',
                                 fillColor: colors.color,
                                 fillOpacity: 1,
                                 strokeColor: '#FFFFFF',
@@ -3707,8 +3559,7 @@
                                 fillOpacity: 1,
                                 strokeColor: '#FFFFFF',
                                 strokeWeight: 2,
-                                scale: 2,
-                                anchor: new google.maps.Point(12, 22)
+                                scale: 2
                             },
                             title: typeof space.name === 'string' ? space.name : space.name[currentLanguage]
                         });
