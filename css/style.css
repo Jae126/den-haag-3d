@@ -1876,3 +1876,8 @@ body {
   margin-right: 1.6rem;
   margin-bottom: 5.5rem;
 }
+
+/* Free OpenStreetMap tiles, darkened to match the site (no API key needed) */
+.map-tiles-dark {
+  filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9) saturate(0.5);
+}
