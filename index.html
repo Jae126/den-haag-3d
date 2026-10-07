@@ -620,22 +620,11 @@
                                 <button id="transport-plan-route-btn" onclick="handleRoutePlanning()" style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); padding: 0.5rem 1rem; background: rgb(5, 150, 105); color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.background='rgb(4, 120, 87)'" onmouseout="this.style.background='rgb(5, 150, 105)'">Plan Route</button>
                             </div>
 
-                            <!-- Nearby Stops Section -->
-                            <div style="margin-bottom: 1.5rem;">
-                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
-                                    <h4 style="margin: 0; color: rgb(96, 165, 250); font-size: 1rem; font-weight: 600;">Nearby Stops</h4>
-                                    <span id="nearby-stops-count" style="color: #90A1B9; font-size: 0.875rem;">Detecting location...</span>
-                                </div>
-                                <div id="nearby-stops-list" style="max-height: 300px; overflow-y: auto; padding-right: 0.5rem;">
-                                    <p style="color: var(--text-slate-400); text-align: center; padding: 1rem;">Detecting your location...</p>
-                                </div>
-                            </div>
-
                             <!-- Route Plan Display -->
                             <div id="route-plan-display" style="display: none;"></div>
 
                             <!-- Selected Stop Details -->
-                            <div id="transport-stop-details" class="transport-stop-details hidden">
+                            <div id="transport-stop-details" class="transport-stop-details hidden" style="margin-bottom: 1.5rem;">
                                 <div class="summary-card" style="border: 2px solid rgba(59, 130, 246, 0.5); padding: 1.5rem; background: rgba(15, 23, 42, 0.95); border-radius: 1rem;">
                                     <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
                                         <div id="transport-stop-icon" style="width: 2rem; height: 2rem; color: rgb(96, 165, 250);"></div>
@@ -659,10 +648,17 @@
                                 </div>
                             </div>
 
-                            <!-- Stops List -->
-                            <div id="transport-stops-list" class="transport-stops-list">
-                                <!-- Stops will be dynamically rendered here -->
+                            <!-- Nearby Stops Section -->
+                            <div style="margin-bottom: 1.5rem;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                                    <h4 style="margin: 0; color: rgb(96, 165, 250); font-size: 1rem; font-weight: 600;">Nearby Stops</h4>
+                                    <span id="nearby-stops-count" style="color: #90A1B9; font-size: 0.875rem;">Detecting location...</span>
+                                </div>
+                                <div id="nearby-stops-list" style="max-height: 300px; overflow-y: auto; padding-right: 0.5rem;">
+                                    <p style="color: var(--text-slate-400); text-align: center; padding: 1rem;">Detecting your location...</p>
+                                </div>
                             </div>
+
 
                         </div>
                     </div>
@@ -3310,6 +3306,7 @@
                     
                     document.getElementById('transport-passengers').textContent = stop.passengers[lang];
                     document.getElementById('transport-stop-details').classList.remove('hidden');
+                    document.getElementById('transport-stop-details').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
             }
             renderTransportStops();

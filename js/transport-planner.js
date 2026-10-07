@@ -4,7 +4,7 @@
  * Uses free services only (no API key needed):
  * - Leaflet + OpenStreetMap for the map
  * - Nominatim (OpenStreetMap) to find the destination
- * - Step-by-step transit directions open in Google Maps (free link, no key)
+ * - Journey advice is worked out here from the stops and lines in the site's own data
  */
 
 // Show up to this many stops in "Nearby Stops"
@@ -135,42 +135,141 @@ async function planRoute(destination) {
     }
 }
 
+// Rough travel speeds in metres per minute (for estimates only)
+const WALK_SPEED = 80;
+const RIDE_SPEED = { train: 800, tram: 300, bus: 300 };
+// Streets are not straight lines: stretch straight-line distances a little
+const DETOUR_FACTOR = 1.3;
+// Closer than this, walking is the best advice
+const WALK_ONLY_DISTANCE = 1200;
+
+function nearestStop(point) {
+    return (window.transportStops || [])
+        .filter(stop => stop.position)
+        .map(stop => ({ ...stop, distance: distanceMeters(point, stop.position) }))
+        .sort((a, b) => a.distance - b.distance)[0] || null;
+}
+
+function sharedLines(a, b) {
+    return a.lines.filter(line => b.lines.includes(line));
+}
+
+function walkMinutes(m) {
+    return Math.max(1, Math.round(m * DETOUR_FACTOR / WALK_SPEED));
+}
+
+// Numbered lines are trams (or buses at bus stops); named lines such as Intercity are trains
+function lineVehicle(from, to, lines) {
+    if (!lines.every(line => /^\d+$/.test(line))) return 'train';
+    return from.type === 'bus' || to.type === 'bus' ? 'bus' : 'tram';
+}
+
+function rideMinutes(from, to, vehicle) {
+    const speed = RIDE_SPEED[vehicle] || RIDE_SPEED.tram;
+    return Math.max(2, Math.round(distanceMeters(from.position, to.position) * DETOUR_FACTOR / speed));
+}
+
+function rideStep(from, to, lines) {
+    const vehicle = lineVehicle(from, to, lines);
+    return { kind: 'ride', from, to, lines, vehicle, minutes: rideMinutes(from, to, vehicle) };
+}
+
+// Work out a simple journey: walk to a stop, ride (with at most one change), walk to the destination
+function buildJourney(origin, target) {
+    const total = distanceMeters(origin, target);
+    if (total <= WALK_ONLY_DISTANCE) {
+        return { walkOnly: true, minutes: walkMinutes(total), distance: total };
+    }
+    const from = nearestStop(origin);
+    const to = nearestStop(target);
+    if (!from || !to || from.id === to.id) {
+        return { walkOnly: true, minutes: walkMinutes(total), distance: total };
+    }
+    const steps = [{ kind: 'walk', to: from, meters: from.distance, minutes: walkMinutes(from.distance) }];
+    const direct = sharedLines(from, to);
+    if (direct.length) {
+        steps.push(rideStep(from, to, direct));
+    } else {
+        const change = (window.transportStops || []).find(stop =>
+            stop.id !== from.id && stop.id !== to.id && sharedLines(from, stop).length && sharedLines(stop, to).length);
+        if (change) {
+            steps.push(rideStep(from, change, sharedLines(from, change)));
+            steps.push(rideStep(change, to, sharedLines(change, to)));
+        } else {
+            steps.push({ kind: 'nolink', from, to });
+        }
+    }
+    const lastWalk = distanceMeters(to.position, target);
+    steps.push({ kind: 'walk-end', meters: lastWalk, minutes: walkMinutes(lastWalk) });
+    const minutes = steps.reduce((sum, step) => sum + (step.minutes || 0), 0);
+    return { walkOnly: false, steps, minutes, distance: total, complete: !steps.some(s => s.kind === 'nolink') };
+}
+
+function journeyStepHtml(step, targetName, lang) {
+    const en = lang === 'en';
+    const row = (icon, title, detail, minutes) => `
+        <li style="display: flex; gap: 0.75rem; align-items: flex-start; padding: 0.75rem 0; border-top: 1px solid rgba(51, 65, 85, 0.6);">
+            <span style="flex-shrink: 0; width: 2rem; height: 2rem; border-radius: 0.5rem; background: rgba(59, 130, 246, 0.15); color: rgb(147, 197, 253); display: flex; align-items: center; justify-content: center;">${icon}</span>
+            <span style="flex: 1;">
+                <span style="display: block; color: var(--text-slate-200); font-weight: 600;">${title}</span>
+                ${detail ? `<span style="display: block; color: var(--text-slate-400); font-size: 0.875rem; margin-top: 0.125rem;">${detail}</span>` : ''}
+            </span>
+            ${minutes ? `<span style="flex-shrink: 0; color: var(--text-slate-300); font-size: 0.875rem;">~${minutes} min</span>` : ''}
+        </li>`;
+    const walkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 1.1rem; height: 1.1rem;"><circle cx="13" cy="4" r="2"/><path d="m9 20 3-6 3 3v4"/><path d="m6 8 4-2 3 3 3 1"/><path d="M10 12l-2 3"/></svg>';
+    const icon = (type) => (window.getTransportTypeIcon ? window.getTransportTypeIcon(type) : '').replace('width: 2rem; height: 2rem;', 'width: 1.1rem; height: 1.1rem;');
+    const name = (stop) => stop.name[lang] || stop.name.en;
+    const lineWord = (vehicle, lines) => `${vehicle === 'train' ? (en ? 'Train' : 'Trein') : vehicle === 'bus' ? 'Bus' : 'Tram'} ${lines.join(' / ')}`;
+    switch (step.kind) {
+        case 'walk':
+            return row(walkIcon, en ? `Walk to ${name(step.to)}` : `Loop naar ${name(step.to)}`, formatDistance(step.meters), step.minutes);
+        case 'ride':
+            return row(icon(step.vehicle), en ? `Take ${lineWord(step.vehicle, step.lines)}` : `Neem ${lineWord(step.vehicle, step.lines)}`,
+                en ? `${name(step.from)} → ${name(step.to)}` : `${name(step.from)} → ${name(step.to)}`, step.minutes);
+        case 'nolink':
+            return row(icon(step.from.type), en ? `Travel from ${name(step.from)} to ${name(step.to)}` : `Reis van ${name(step.from)} naar ${name(step.to)}`,
+                en ? 'No direct line between these stops in our data. Ask staff for the best connection.' : 'Geen directe lijn tussen deze haltes in onze gegevens. Vraag een medewerker naar de beste verbinding.', 0);
+        case 'walk-end':
+            return row(walkIcon, en ? `Walk to ${targetName}` : `Loop naar ${targetName}`, formatDistance(step.meters), step.minutes);
+        default:
+            return '';
+    }
+}
+
 function drawRoute(origin, target, targetName) {
     clearRoute();
     const lang = plannerLang();
+    const en = lang === 'en';
     if (plannerMap) {
         const line = L.polyline([origin, target], { color: '#3B82F6', weight: 4, opacity: 0.85, dashArray: '8 8' }).addTo(plannerMap);
-        const start = L.circleMarker(origin, { radius: 8, color: '#FFFFFF', weight: 2, fillColor: '#22C55E', fillOpacity: 1 }).addTo(plannerMap);
-        const end = L.circleMarker(target, { radius: 9, color: '#FFFFFF', weight: 2, fillColor: '#3B82F6', fillOpacity: 1 }).addTo(plannerMap);
-        end.bindTooltip(targetName);
-        routeLayers = [line, start, end];
+        routeLayers = [line];
         plannerMap.fitBounds(line.getBounds(), { padding: [40, 40] });
     }
 
-    const nearestStop = (window.transportStops || [])
-        .map(stop => ({ ...stop, distance: distanceMeters(target, stop.position) }))
-        .sort((a, b) => a.distance - b.distance)[0];
-    const directionsUrl = `https://www.google.com/maps/dir/?api=1&origin=${origin.lat},${origin.lng}`
-        + `&destination=${target.lat},${target.lng}&travelmode=transit`;
-    const fromLabel = origin === DEN_HAAG_CENTRAAL ? 'Den Haag Centraal' : (lang === 'en' ? 'Your location' : 'Jouw locatie');
+    const journey = buildJourney(origin, target);
+    const fromLabel = origin === DEN_HAAG_CENTRAAL ? 'Den Haag Centraal' : (en ? 'Your location' : 'Jouw locatie');
+    const body = journey.walkOnly
+        ? `<p style="margin: 0; color: var(--text-slate-300);">${en ? `It is close by: walk about ${formatDistance(journey.distance)}.` : `Dichtbij: ongeveer ${formatDistance(journey.distance)} lopen.`}</p>`
+        : `<ol style="list-style: none; margin: 0; padding: 0;">${journey.steps.map(step => journeyStepHtml(step, targetName, lang)).join('')}</ol>`;
 
     const displayElement = document.getElementById('route-plan-display');
     if (!displayElement) return;
     displayElement.innerHTML = `
-        <div style="padding: 1rem; background: rgba(15, 23, 42, 0.95); border: 2px solid rgba(59, 130, 246, 0.5); border-radius: 0.75rem; margin-bottom: 1rem;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
-                <h4 style="margin: 0; color: rgb(96, 165, 250); font-size: 1rem; font-weight: 600;">Route</h4>
-                <button onclick="clearRoute()" style="padding: 0.25rem 0.75rem; background: transparent; border: 1px solid rgba(59, 130, 246, 0.5); border-radius: 0.375rem; color: rgb(96, 165, 250); cursor: pointer; font-size: 0.75rem;">${lang === 'en' ? 'Clear' : 'Wissen'}</button>
+        <div style="padding: 1.25rem; background: rgba(15, 23, 42, 0.95); border: 2px solid rgba(59, 130, 246, 0.6); border-radius: 0.75rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem;">
+                <div>
+                    <h4 style="margin: 0; color: rgb(96, 165, 250); font-size: 1.1rem; font-weight: 600;">${fromLabel} → ${targetName}</h4>
+                    <p style="margin: 0.25rem 0 0 0; color: var(--text-slate-400); font-size: 0.875rem;">
+                        ${journey.complete === false ? '' : `${en ? 'About' : 'Ongeveer'} <strong style="color: var(--text-slate-200);">${journey.minutes} min</strong> · `}${formatDistance(journey.distance)} ${en ? 'as the crow flies' : 'hemelsbreed'}
+                    </p>
+                </div>
+                <button onclick="clearRoute()" style="flex-shrink: 0; min-height: 2.25rem; padding: 0 0.9rem; background: transparent; border: 1px solid rgba(59, 130, 246, 0.5); border-radius: 0.5rem; color: rgb(96, 165, 250); cursor: pointer; font-size: 0.875rem;">${en ? 'Close' : 'Sluiten'}</button>
             </div>
-            <div style="color: var(--text-slate-300); font-size: 0.875rem;">
-                <p style="margin: 0 0 0.5rem 0;"><strong>${lang === 'en' ? 'From:' : 'Van:'}</strong> ${fromLabel}</p>
-                <p style="margin: 0 0 0.5rem 0;"><strong>${lang === 'en' ? 'To:' : 'Naar:'}</strong> ${targetName}</p>
-                <p style="margin: 0 0 0.5rem 0;"><strong>${lang === 'en' ? 'Distance (straight line):' : 'Afstand (hemelsbreed):'}</strong> ${formatDistance(distanceMeters(origin, target))}</p>
-                ${nearestStop ? `<p style="margin: 0 0 0.75rem 0;"><strong>${lang === 'en' ? 'Closest stop to destination:' : 'Dichtstbijzijnde halte:'}</strong> ${nearestStop.name[lang] || nearestStop.name.en} (${formatDistance(nearestStop.distance)})</p>` : ''}
-                <a href="${directionsUrl}" target="_blank" rel="noopener noreferrer" style="color: rgb(96, 165, 250);">${lang === 'en' ? 'Open step-by-step transit directions ↗' : 'Open reisadvies met OV ↗'}</a>
-            </div>
+            ${body}
+            <p style="margin: 0.75rem 0 0 0; color: var(--text-slate-500); font-size: 0.75rem;">${en ? 'Times are estimates based on distance, not live timetables.' : 'Tijden zijn schattingen op basis van afstand, geen actuele dienstregeling.'}</p>
         </div>`;
     displayElement.style.display = 'block';
+    displayElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function showRoutePlanningLoading(isLoading) {
