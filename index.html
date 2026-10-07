@@ -46,31 +46,24 @@
                     <!-- Menu Items -->
                     <nav style="flex: 1; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
                         <button class="menu-item" data-menu="design" onclick="toggleMenu('design')" style="width: 100%; padding: 1.25rem; border-radius: 1rem; display: flex; align-items: center; gap: 1rem; transition: all 0.2s; background: rgba(30, 41, 59, 0.5); color: var(--text-slate-300); border: none; cursor: pointer; font-size: 1.1rem; font-weight: 500;" onmouseover="if(!this.classList.contains('active')) { this.style.background='rgba(30, 41, 59, 1)'; this.style.color='rgb(52, 211, 153)'; }" onmouseout="updateMenuItemStyle(this)">
-                            <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1.5rem; height: 1.5rem;">
-                                <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                            <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 1.5rem; height: 1.5rem;">
+                                <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/>
+                                <path d="M9 18h6"/>
+                                <path d="M10 22h4"/>
                             </svg>
                             <span data-i18n="design-concept">Design Concept</span>
                         </button>
                         <button class="menu-item" data-menu="layers" onclick="toggleMenu('layers')" style="width: 100%; padding: 1.25rem; border-radius: 1rem; display: flex; align-items: center; gap: 1rem; transition: all 0.2s; background: rgba(30, 41, 59, 0.5); color: var(--text-slate-300); border: none; cursor: pointer; font-size: 1.1rem; font-weight: 500;" onmouseover="if(!this.classList.contains('active')) { this.style.background='rgba(30, 41, 59, 1)'; this.style.color='rgb(52, 211, 153)'; }" onmouseout="updateMenuItemStyle(this)">
-                            <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1.5rem; height: 1.5rem;">
+                            <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 1.5rem; height: 1.5rem;">
                                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                             </svg>
                             <span data-i18n="city-data-layers">City Data Layers</span>
                         </button>
                         <button class="menu-item" data-menu="settings" onclick="toggleMenu('settings')" style="width: 100%; padding: 1.25rem; border-radius: 1rem; display: flex; align-items: center; gap: 1rem; transition: all 0.2s; background: rgba(30, 41, 59, 0.5); color: var(--text-slate-300); border: none; cursor: pointer; font-size: 1.1rem; font-weight: 500;" onmouseover="if(!this.classList.contains('active')) { this.style.background='rgba(30, 41, 59, 1)'; this.style.color='rgb(52, 211, 153)'; }" onmouseout="updateMenuItemStyle(this)">
-                            <span class="nav-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="3"/>
-                                    <line x1="12" y1="1" x2="12" y2="6"/>
-                                    <line x1="12" y1="18" x2="12" y2="23"/>
-                                    <line x1="23" y1="12" x2="18" y2="12"/>
-                                    <line x1="6" y1="12" x2="1" y2="12"/>
-                                    <line x1="19.07" y1="4.93" x2="14.83" y2="9.17"/>
-                                    <line x1="9.17" y1="14.83" x2="4.93" y2="19.07"/>
-                                    <line x1="19.07" y1="19.07" x2="14.83" y2="14.83"/>
-                                    <line x1="9.17" y1="9.17" x2="4.93" y2="4.93"/>
-                                </svg>
-                            </span>
+                            <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 1.5rem; height: 1.5rem;">
+                                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
                             <span data-i18n="settings">Settings</span>
                         </button>
                     </nav>
@@ -186,7 +179,7 @@
                         <div class="layer-item" data-layer="traffic" style="padding: 1rem; border-radius: 0.75rem; border: 1px solid rgba(51, 65, 85, 0.5); background: rgba(30, 41, 59, 0.5); transition: all 0.2s;">
                             <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
                                 <!-- Update 'warning-icon.png' with your actual warning icon image filename -->
-                                <img src="assets/images/warning-icon.png" alt="Traffic Warning" class="layer-icon" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0; object-fit: contain; image-rendering: pixelated;">
+                                <svg class="layer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
                                 <div style="flex: 1; min-width: 0;">
                                     <button class="layer-label" onclick="selectLayer('traffic')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))" data-i18n="traffic-congestion">Traffic Congestion & Dangerous Spots</button>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -202,7 +195,7 @@
                         <div class="layer-item" data-layer="construction" style="padding: 1rem; border-radius: 0.75rem; border: 1px solid rgba(51, 65, 85, 0.5); background: rgba(30, 41, 59, 0.5); transition: all 0.2s;">
                             <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
                                 <!-- Update 'construction-icon.png' with your actual construction icon image filename -->
-                                <img src="assets/images/construction-icon.png" alt="Construction" class="layer-icon" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0; object-fit: contain; image-rendering: pixelated;">
+                                <svg class="layer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0;"><rect x="2" y="6" width="20" height="8" rx="1"/><path d="M17 14v7"/><path d="M7 14v7"/><path d="M17 3v3"/><path d="M7 3v3"/><path d="M10 14 2.3 6.3"/><path d="m14 6 7.7 7.7"/><path d="m8 6 8 8"/></svg>
                                 <div style="flex: 1; min-width: 0;">
                                     <button class="layer-label" onclick="selectLayer('construction')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))" data-i18n="construction-road">Construction & Road Closures</button>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -218,7 +211,7 @@
                         <div class="layer-item" data-layer="heat" style="padding: 1rem; border-radius: 0.75rem; border: 1px solid rgba(51, 65, 85, 0.5); background: rgba(30, 41, 59, 0.5); transition: all 0.2s;">
                             <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
                                 <!-- Update 'heat-icon.png' with your actual heat/thermometer icon image filename -->
-                                <img src="assets/images/heat-icon.png" alt="Heat Stress" class="layer-icon" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0; object-fit: contain; image-rendering: pixelated;">
+                                <svg class="layer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0;"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
                                 <div style="flex: 1; min-width: 0;">
                                     <button class="layer-label" onclick="selectLayer('heat')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))" data-i18n="heat-stress">Heat Stress</button>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -234,7 +227,7 @@
                         <div class="layer-item" data-layer="transport" style="padding: 1rem; border-radius: 0.75rem; border: 1px solid rgba(51, 65, 85, 0.5); background: rgba(30, 41, 59, 0.5); transition: all 0.2s;">
                             <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
                                 <!-- Update 'transport-icon.png' with your actual transport/vehicle icon image filename -->
-                                <img src="assets/images/transport-icon.png" alt="Public Transport" class="layer-icon" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0; object-fit: contain; image-rendering: pixelated;">
+                                <svg class="layer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0;"><path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/></svg>
                                 <div style="flex: 1; min-width: 0;">
                                     <button class="layer-label" onclick="selectLayer('transport')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))" data-i18n="public-transport">Public Transport Network</button>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -250,7 +243,7 @@
                         <div class="layer-item" data-layer="green" style="padding: 1rem; border-radius: 0.75rem; border: 1px solid rgba(51, 65, 85, 0.5); background: rgba(30, 41, 59, 0.5); transition: all 0.2s;">
                             <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
                                 <!-- Update 'green-icon.png' with your actual green spaces/trees icon image filename -->
-                                <img src="assets/images/green-icon.png" alt="Green Spaces & Trees" class="layer-icon" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0; object-fit: contain; image-rendering: pixelated;">
+                                <svg class="layer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0;"><path d="M10 10v.2A3 3 0 0 1 8.9 16H5a3 3 0 0 1-1-5.8V10a3 3 0 0 1 6 0Z"/><path d="M7 16v6"/><path d="M13 19v3"/><path d="M12 19h8.3a1 1 0 0 0 .7-1.7L18 14h.3a1 1 0 0 0 .7-1.7L16 9h.2a1 1 0 0 0 .8-1.7L13 3l-1.4 1.5"/></svg>
                                 <div style="flex: 1; min-width: 0;">
                                     <button class="layer-label" onclick="selectLayer('green')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))" data-i18n="green-spaces">Green Spaces & Trees</button>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -266,7 +259,7 @@
                         <div class="layer-item" data-layer="demographics" style="padding: 1rem; border-radius: 0.75rem; border: 1px solid rgba(51, 65, 85, 0.5); background: rgba(30, 41, 59, 0.5); transition: all 0.2s;">
                             <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
                                 <!-- Update 'demographics-icon.png' with your actual demographics/people icon image filename -->
-                                <img src="assets/images/demographics-icon.png" alt="Demographics" class="layer-icon" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0; object-fit: contain; image-rendering: pixelated;">
+                                <svg class="layer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0;"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                                 <div style="flex: 1; min-width: 0;">
                                     <button class="layer-label" onclick="selectLayer('demographics')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))" data-i18n="demographics">Demographics</button>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -282,7 +275,7 @@
                         <div class="layer-item" data-layer="noise" style="padding: 1rem; border-radius: 0.75rem; border: 1px solid rgba(51, 65, 85, 0.5); background: rgba(30, 41, 59, 0.5); transition: all 0.2s;">
                             <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
                                 <!-- Update 'noise-icon.png' with your actual noise/speaker icon image filename -->
-                                <img src="assets/images/noise-icon.png" alt="Noise Pollution" class="layer-icon" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0; object-fit: contain; image-rendering: pixelated;">
+                                <svg class="layer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 1.25rem; height: 1.25rem; margin-top: 0.1rem; flex-shrink: 0;"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/></svg>
                                 <div style="flex: 1; min-width: 0;">
                                     <button class="layer-label" onclick="selectLayer('noise')" style="margin-bottom: 0.75rem; text-align: left; width: 100%; color: var(--text-slate-300); font-size: 0.875rem; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="if(!this.closest('.layer-item').classList.contains('selected')) this.style.color='rgb(110, 231, 183)'" onmouseout="updateLayerItemStyle(this.closest('.layer-item'))" data-i18n="noise-pollution">Noise Pollution</button>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -350,7 +343,7 @@
                             <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: rgba(30, 41, 59, 0.5); border-radius: 0.75rem;">
                                 <div style="display: flex; align-items: center; gap: 0.75rem;">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1.25rem; height: 1.25rem; color: rgb(52, 211, 153);">
-                                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>
+                                        <circle cx="12" cy="12" r="10"/><path d="M12 18a6 6 0 0 0 0-12v12z" fill="currentColor"/>
                                     </svg>
                                     <span style="color: var(--text-slate-300);" data-i18n="high-contrast">High Contrast</span>
                                 </div>
@@ -743,7 +736,7 @@
                                 <div class="green-space-detail-header">
                                     <div id="green-space-icon-box" class="green-space-icon-box">
                                         <svg id="green-space-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 2rem; height: 2rem;">
-                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                            <path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17Z" stroke-linejoin="round"/><path d="M12 22v-3" stroke-linecap="round"/>
                                         </svg>
                                     </div>
                                     <div>
@@ -1196,8 +1189,9 @@
                 }
 
                 // Call onMapLoad callback
+                // Run after the constructor returns so mapInstances[layer] is already assigned
                 if (this.onMapLoad) {
-                    this.onMapLoad(this.map);
+                    setTimeout(() => this.onMapLoad(this.map, this), 0);
                 }
             }
 
@@ -1384,6 +1378,16 @@
                 return polygon;
             }
 
+            addCircle(options) {
+                if (!this.map) return null;
+                const circle = new google.maps.Circle({
+                    ...options,
+                    map: this.map
+                });
+                this.polygons.push(circle);
+                return circle;
+            }
+
             addPolyline(options) {
                 if (!this.map) return null;
                 const polyline = new google.maps.Polyline({
@@ -1415,6 +1419,125 @@
 
         // Store map instances
         const mapInstances = {};
+
+        // ============================================
+        // Map locations per card (approximate positions in The Hague)
+        // lat/lng = centre, r = radius in metres for areas. Edit here to fine-tune.
+        // ============================================
+        const DEN_HAAG_CENTER = { lat: 52.0705, lng: 4.3007 };
+        const MAP_LOCATIONS = {
+            heat: {
+                1: { lat: 52.0780, lng: 4.3100, r: 900 },  // City Center
+                2: { lat: 52.1100, lng: 4.2760, r: 900 },  // Scheveningen Beach
+                3: { lat: 52.0680, lng: 4.3450, r: 800 },  // Industrial Zone (Binckhorst)
+                4: { lat: 52.0570, lng: 4.2880, r: 700 },  // Zuiderpark
+                5: { lat: 52.0640, lng: 4.2950, r: 600 },  // Transvaal
+                6: { lat: 52.0530, lng: 4.2280, r: 700 }   // Ockenburg
+            },
+            noise: {
+                1: { lat: 52.0740, lng: 4.3360, r: 700 },  // A12 corridor
+                2: { lat: 52.0780, lng: 4.3100, r: 900 },  // City Center
+                3: { lat: 52.0805, lng: 4.3245, r: 500 },  // Train Station Area
+                4: { lat: 52.1100, lng: 4.2760, r: 900 },  // Scheveningen Beach
+                5: { lat: 52.0790, lng: 4.2750, r: 900 },  // Segbroek
+                6: { lat: 52.0570, lng: 4.2880, r: 700 },  // Zuiderpark
+                7: { lat: 52.0680, lng: 4.3450, r: 800 },  // Industrial Zone (Binckhorst)
+                8: { lat: 52.0905, lng: 4.3380, r: 700 }   // Haagse Bos
+            },
+            green: {
+                1: { lat: 52.0570, lng: 4.2880 },  // Zuiderpark
+                2: { lat: 52.0905, lng: 4.3380 },  // Haagse Bos
+                3: { lat: 52.1020, lng: 4.2890 },  // Westbroekpark
+                4: { lat: 52.0950, lng: 4.2800 },  // Scheveningse Bosjes
+                5: { lat: 52.0960, lng: 4.3460 },  // Clingendael
+                6: { lat: 52.0530, lng: 4.2280 }   // Ockenburg
+            },
+            demographics: {
+                'WK051801': { lat: 52.0840, lng: 4.3500, r: 900 },  // Bezuidenhout-Oost
+                'WK051802': { lat: 52.0770, lng: 4.3080, r: 1100 }, // Centrum
+                'WK051803': { lat: 52.1050, lng: 4.2850, r: 1500 }, // Scheveningen
+                'WK051804': { lat: 52.0650, lng: 4.3350, r: 1100 }, // Laak
+                'WK051805': { lat: 52.0510, lng: 4.2780, r: 1700 }, // Escamp
+                'WK051806': { lat: 52.0790, lng: 4.2700, r: 1200 }, // Segbroek
+                'WK051807': { lat: 52.0550, lng: 4.2400, r: 1600 }, // Loosduinen
+                'WK051808': { lat: 52.0950, lng: 4.3450, r: 1500 }  // Haagse Hout
+            }
+        };
+
+        // Shapes and markers drawn per layer, keyed by card id
+        const mapShapes = {};
+
+        function getMapLocation(layer, id) {
+            if (layer === 'transport') {
+                const stop = (window.transportStops || []).find(s => s.id === id);
+                return stop ? stop.position : null;
+            }
+            return (MAP_LOCATIONS[layer] || {})[id] || null;
+        }
+
+        function registerMapShape(layer, id, shape) {
+            if (!shape) return;
+            if (!mapShapes[layer]) mapShapes[layer] = {};
+            mapShapes[layer][id] = { shape, base: { strokeWeight: shape.get('strokeWeight'), fillOpacity: shape.get('fillOpacity') } };
+        }
+
+        // Draw an area as a circle at its MAP_LOCATIONS position
+        function addZoneShape(layer, id, options) {
+            const inst = mapInstances[layer];
+            if (!inst) return null;
+            const loc = getMapLocation(layer, id);
+            const shape = loc && loc.r
+                ? inst.addCircle({ ...options, center: { lat: loc.lat, lng: loc.lng }, radius: loc.r })
+                : inst.addPolygon({ ...options, paths: [
+                    { lat: 52.072, lng: 4.298 }, { lat: 52.072, lng: 4.318 },
+                    { lat: 52.082, lng: 4.318 }, { lat: 52.082, lng: 4.298 }
+                ] });
+            registerMapShape(layer, id, shape);
+            return shape;
+        }
+
+        function highlightMapShape(layer, id) {
+            const shapes = mapShapes[layer] || {};
+            Object.keys(shapes).forEach(key => {
+                const { shape, base } = shapes[key];
+                const active = id !== null && String(key) === String(id);
+                if (shape instanceof google.maps.Marker) {
+                    shape.setAnimation(active ? google.maps.Animation.BOUNCE : null);
+                    shape.setZIndex(active ? 1000 : null);
+                    if (active) setTimeout(() => shape.setAnimation(null), 1400);
+                } else {
+                    shape.setOptions({
+                        strokeWeight: active ? 4 : base.strokeWeight,
+                        fillOpacity: active ? Math.min((base.fillOpacity || 0.3) + 0.25, 0.7) : base.fillOpacity
+                    });
+                }
+            });
+        }
+
+        // Zoom the layer's map to a card's location (id null = back to the whole city)
+        function focusMapOn(layer, id) {
+            const inst = mapInstances[layer];
+            if (!inst || !inst.map || typeof google === 'undefined') return;
+            const loc = id === null ? null : getMapLocation(layer, id);
+            if (!loc) {
+                inst.map.panTo(DEN_HAAG_CENTER);
+                inst.map.setZoom(12);
+                highlightMapShape(layer, null);
+                return;
+            }
+            const center = { lat: loc.lat, lng: loc.lng };
+            if (loc.r) {
+                const bounds = new google.maps.Circle({ center, radius: loc.r }).getBounds();
+                inst.map.fitBounds(bounds, 40);
+            } else {
+                inst.map.panTo(center);
+                inst.map.setZoom(loc.zoom || 16);
+            }
+            highlightMapShape(layer, id);
+            const container = document.getElementById(`${layer}-map-container`);
+            if (container) container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
 
         // ============================================
         // Projection Window Support
@@ -2105,9 +2228,6 @@
                 updateTransportLanguage();
             }
             
-            // Refresh waste layer if visible
-            if (!document.getElementById('waste-detail').classList.contains('hidden')) {
-            }
         }
 
         function setTextSize(size) {
@@ -2478,7 +2598,7 @@
                 card.setAttribute('data-area-id', area.id);
                 if (isSelected) card.classList.add('selected');
                 card.style.borderColor = isSelected ? 'rgba(167, 139, 250, 0.8)' : `rgba(${parseInt(color.slice(1, 3), 16)}, ${parseInt(color.slice(3, 5), 16)}, ${parseInt(color.slice(5, 7), 16)}, 0.5)`;
-                card.onclick = () => selectDemographicsArea(area.id);
+                card.onclick = () => { selectDemographicsArea(area.id); focusMapOn('demographics', selectedDemographicsArea); };
                 
                 const indicatorLabel = getIndicatorLabel(currentChoroplethIndicator);
                 const displayValue = value !== null ? formatDemographicsValue(value) + (currentChoroplethIndicator === 'bev_dich' ? '/km²' : currentChoroplethIndicator === 'g_hhgro' ? '' : '%') : '—';
@@ -2866,13 +2986,13 @@
                 card.setAttribute('data-space-id', space.id);
                 if (isSelected) card.classList.add('selected');
                 card.style.borderColor = isSelected ? 'rgba(74, 222, 128, 0.8)' : 'rgba(34, 197, 94, 0.5)';
-                card.onclick = () => selectGreenSpace(space.id);
+                card.onclick = () => { selectGreenSpace(space.id); focusMapOn('green', selectedGreenSpace); };
                 
                 card.innerHTML = `
                     <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
                         <div style="padding: 0.75rem; background: ${typeBg}; border-radius: var(--radius-lg);">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1.5rem; height: 1.5rem; color: ${typeColor};">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                <path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17Z" stroke-linejoin="round"/><path d="M12 22v-3" stroke-linecap="round"/>
                             </svg>
                         </div>
                         <div style="flex: 1;">
@@ -2927,7 +3047,7 @@
                 <div class="green-space-detail-header" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
                     <div class="green-space-icon-box" style="padding: 0.75rem; background: ${typeBg}; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 2rem; height: 2rem; color: ${typeColor};">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            <path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17Z" stroke-linejoin="round"/><path d="M12 22v-3" stroke-linecap="round"/>
                         </svg>
                     </div>
                     <div>
@@ -3391,6 +3511,7 @@
         }
 
         function initTransportMap() {
+            mapShapes['transport'] = {};
             // Cleanup existing real-time updates if any
             if (window.TransportRealtime) {
                 window.TransportRealtime.cleanup();
@@ -3461,6 +3582,7 @@
                             title: stop.name[currentLanguage]
                         });
                         
+                        registerMapShape('transport', stop.id, marker);
                         // Add click listener to select stop
                         if (marker) {
                             marker.addListener('click', () => {
@@ -3502,6 +3624,7 @@
         }
 
         function initHeatMap() {
+            mapShapes['heat'] = {};
             if (mapInstances['heat']) {
                 mapInstances['heat'].destroy();
             }
@@ -3516,13 +3639,7 @@
                     heatZones.forEach(zone => {
                         const color = getHeatZoneColor(zone.intensity);
                         const borderColor = getHeatZoneBorderColor(zone.intensity);
-                        const polygon = mapInstances['heat'].addPolygon({
-                            paths: zone.polygon || [
-                                { lat: 52.072, lng: 4.298 },
-                                { lat: 52.072, lng: 4.318 },
-                                { lat: 52.082, lng: 4.318 },
-                                { lat: 52.082, lng: 4.298 }
-                            ],
+                        const polygon = addZoneShape('heat', zone.id, {
                             fillColor: color,
                             fillOpacity: 0.3,
                             strokeColor: borderColor,
@@ -3568,6 +3685,7 @@
         }
 
         function initGreenSpacesMap() {
+            mapShapes['green'] = {};
             if (mapInstances['green']) {
                 mapInstances['green'].destroy();
             }
@@ -3582,7 +3700,7 @@
                     greenSpaces.forEach(space => {
                         const color = space.type === 'park' ? '#10B981' : '#059669';
                         const marker = mapInstances['green'].addMarker({
-                            position: space.position || { lat: 52.0705, lng: 4.3007 },
+                            position: getMapLocation('green', space.id) || DEN_HAAG_CENTER,
                             icon: {
                                 path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
                                 fillColor: color,
@@ -3592,9 +3710,10 @@
                                 scale: 2,
                                 anchor: new google.maps.Point(12, 22)
                             },
-                            title: space.name[currentLanguage]
+                            title: typeof space.name === 'string' ? space.name : space.name[currentLanguage]
                         });
                         
+                        registerMapShape('green', space.id, marker);
                         if (marker) {
                             marker.addListener('click', () => {
                                 selectGreenSpace(space.id);
@@ -3628,6 +3747,7 @@
         }
 
         function initDemographicsMap() {
+            mapShapes['demographics'] = {};
             if (mapInstances['demographics']) {
                 mapInstances['demographics'].destroy();
             }
@@ -3640,13 +3760,7 @@
                 onMapLoad: (map) => {
                     // Add neighborhood area polygons (choropleth)
                     denHaagAreas.forEach(area => {
-                        const polygon = mapInstances['demographics'].addPolygon({
-                            paths: area.polygon || [
-                                { lat: 52.072, lng: 4.298 },
-                                { lat: 52.072, lng: 4.318 },
-                                { lat: 52.082, lng: 4.318 },
-                                { lat: 52.082, lng: 4.298 }
-                            ],
+                        const polygon = addZoneShape('demographics', area.id, {
                             fillColor: '#8B5CF6',
                             fillOpacity: 0.3,
                             strokeColor: '#7C3AED',
@@ -3681,6 +3795,7 @@
         }
 
         function initNoiseMap() {
+            mapShapes['noise'] = {};
             if (mapInstances['noise']) {
                 mapInstances['noise'].destroy();
             }
@@ -3696,13 +3811,7 @@
                         const color = zone.category === 'low' ? '#22C55E' : zone.category === 'moderate' ? '#EAB308' : '#EF4444';
                         const borderColor = zone.category === 'low' ? '#16A34A' : zone.category === 'moderate' ? '#CA8A04' : '#DC2626';
                         
-                        const polygon = mapInstances['noise'].addPolygon({
-                            paths: zone.polygon || [
-                                { lat: 52.072, lng: 4.298 },
-                                { lat: 52.072, lng: 4.318 },
-                                { lat: 52.082, lng: 4.318 },
-                                { lat: 52.082, lng: 4.298 }
-                            ],
+                        const polygon = addZoneShape('noise', zone.id, {
                             fillColor: color,
                             fillOpacity: 0.3,
                             strokeColor: borderColor,
@@ -3764,7 +3873,7 @@
                 card.className = 'transport-stop-card';
                 if (isSelected) card.classList.add('selected');
                 card.style.cssText = `padding: 1rem; background: rgba(15, 23, 42, 0.95); border: 2px solid ${isSelected ? 'rgba(59, 130, 246, 0.8)' : 'rgba(59, 130, 246, 0.3)'}; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s;`;
-                card.onclick = () => selectTransportStop(stop.id);
+                card.onclick = () => { selectTransportStop(stop.id); focusMapOn('transport', selectedTransportStop); };
                 
                 card.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -3890,7 +3999,7 @@
                 card.setAttribute('data-zone-id', zone.id);
                 if (isSelected) card.classList.add('selected');
                 card.style.borderColor = isSelected ? 'rgba(248, 113, 113, 0.8)' : `rgba(${zone.intensity === 'high' ? '239, 68, 68' : zone.intensity === 'medium' ? '249, 115, 22' : '234, 179, 8'}, 0.5)`;
-                card.onclick = () => selectHeatZone(zone.id);
+                card.onclick = () => { selectHeatZone(zone.id); focusMapOn('heat', selectedHeatZone); };
                 
                 card.innerHTML = `
                     <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
@@ -4048,7 +4157,7 @@
             } else if (category === 'moderate') {
                 return '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>';
             } else {
-                return '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="9"/><line x1="23" y1="15" x2="17" y2="15"/>';
+                return '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>';
             }
         }
 
@@ -4081,7 +4190,7 @@
                 card.setAttribute('data-zone-id', zone.id);
                 if (isSelected) card.classList.add('selected');
                 card.style.borderColor = isSelected ? 'rgba(167, 139, 250, 0.8)' : `rgba(${zone.category === 'high' ? '239, 68, 68' : zone.category === 'moderate' ? '234, 179, 8' : '34, 197, 94'}, 0.5)`;
-                card.onclick = () => selectNoiseZone(zone.id);
+                card.onclick = () => { selectNoiseZone(zone.id); focusMapOn('noise', selectedNoiseZone); };
                 
                 card.innerHTML = `
                     <div style="display: flex; align-items: flex-start; gap: 0.75rem;">

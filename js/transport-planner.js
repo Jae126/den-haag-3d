@@ -47,7 +47,7 @@ const MAX_NEARBY_STOPS = 10;
 // Global State
 // ============================================
 
-let transportMap = null;
+let plannerMap = null;
 let directionsService = null;
 let directionsRenderer = null;
 let userLocation = null;
@@ -145,7 +145,7 @@ async function initTransportPlanner(map) {
         return;
     }
     
-    transportMap = map;
+    plannerMap = map;
     
     try {
         // Initialize DirectionsService
@@ -343,7 +343,7 @@ function renderNearbyStopsMarkers(stops) {
     // Clear existing markers
     clearNearbyStopsMarkers();
     
-    if (!transportMap || !stops || stops.length === 0) {
+    if (!plannerMap || !stops || stops.length === 0) {
         return;
     }
     
@@ -353,7 +353,7 @@ function renderNearbyStopsMarkers(stops) {
         const colors = getTransportTypeColor(stop.type);
         const marker = new google.maps.Marker({
             position: stop.position,
-            map: transportMap,
+            map: plannerMap,
             icon: {
                 path: google.maps.SymbolPath.CIRCLE,
                 fillColor: colors.color,
@@ -400,8 +400,8 @@ async function planRoute(destination) {
             return;
         }
         // If we have a map, try to initialize
-        if (transportMap) {
-            await initTransportPlanner(transportMap);
+        if (plannerMap) {
+            await initTransportPlanner(plannerMap);
         } else {
             showRoutePlanningError('Map is not initialized. Please wait for the map to load.');
             return;
@@ -419,8 +419,8 @@ async function planRoute(destination) {
     if (userLocation) {
         origin = new google.maps.LatLng(userLocation.lat, userLocation.lng);
         console.log('[TransportPlanner] Using user location as origin');
-    } else if (transportMap) {
-        const center = transportMap.getCenter();
+    } else if (plannerMap) {
+        const center = plannerMap.getCenter();
         if (center) {
             origin = center;
             console.log('[TransportPlanner] Using map center as origin');
@@ -616,7 +616,7 @@ function cleanupTransportPlanner() {
     }
     
     directionsService = null;
-    transportMap = null;
+    plannerMap = null;
     userLocation = null;
     isInitialized = false;
 }
