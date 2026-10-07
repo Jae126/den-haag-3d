@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Den Haag in 3D</title>
-    <link rel="stylesheet" href="css/style.css?v=12">
+    <link rel="stylesheet" href="css/style.css?v=13">
     <!-- Free map: Leaflet + OpenStreetMap (no API key needed) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -2370,63 +2370,48 @@
             }
         }
 
+        // One colour scale per indicator, shared by the cards, the map circles and the legend
+        const CHOROPLETH_SCALES = {
+            bev_dich: { colors: ['#10B981', '#EAB308', '#F97316', '#C2410C'], breaks: [5000, 7000, 9000], labels: ['< 5,000', '5,000–7,000', '7,000–9,000', '> 9,000'] },
+            pct: { colors: ['#93C5FD', '#60A5FA', '#3B82F6', '#1D4ED8'], breaks: [10, 20, 30], labels: ['< 10%', '10–20%', '20–30%', '> 30%'] },
+            g_hhgro: { colors: ['#D8B4FE', '#C084FC', '#A855F7', '#7E22CE'], breaks: [1.6, 1.8, 2.0], labels: ['< 1.6', '1.6–1.8', '1.8–2.0', '> 2.0'] }
+        };
+
+        function getChoroplethScale() {
+            if (currentChoroplethIndicator.startsWith('pct_')) return CHOROPLETH_SCALES.pct;
+            return CHOROPLETH_SCALES[currentChoroplethIndicator] || null;
+        }
+
         function getPolygonColor(area) {
             const value = calculateIndicator(area, currentChoroplethIndicator);
-            if (value === null) return '#6B7280';
-            
-            if (currentChoroplethIndicator === 'bev_dich') {
-                if (value < 5000) return '#10B981';
-                else if (value < 7000) return '#EAB308';
-                else if (value < 9000) return '#F97316';
-                else return '#F97316'; // Orange instead of red
-            } else if (currentChoroplethIndicator.startsWith('pct_')) {
-                if (value < 10) return '#93C5FD';
-                else if (value < 20) return '#60A5FA';
-                else if (value < 30) return '#3B82F6';
-                else return '#2563EB';
-            } else if (currentChoroplethIndicator === 'g_hhgro') {
-                if (value < 1.6) return '#D8B4FE';
-                else if (value < 1.8) return '#C084FC';
-                else if (value < 2.0) return '#A855F7';
-                else return '#9333EA';
-            }
-            return '#6B7280';
+            const scale = getChoroplethScale();
+            if (value === null || !scale) return '#6B7280';
+            const index = scale.breaks.findIndex(limit => value < limit);
+            return scale.colors[index === -1 ? scale.colors.length - 1 : index];
+        }
+
+        // Give every circle on the map the same colour as its card
+        function recolorDemographicsMap() {
+            const shapes = mapShapes['demographics'] || {};
+            denHaagAreas.forEach(area => {
+                const entry = shapes[area.id];
+                if (entry) entry.shape.setStyle({ color: getPolygonColor(area), fillColor: getPolygonColor(area) });
+            });
         }
 
         function updateChoroplethIndicator(indicator) {
             currentChoroplethIndicator = indicator;
             updateChoroplethLegend();
             renderNeighborhoodAreas();
+            recolorDemographicsMap();
         }
 
         function updateChoroplethLegend() {
             const legend = document.getElementById('choropleth-legend');
             if (!legend) return;
-            
-            let html = '';
-            if (currentChoroplethIndicator === 'bev_dich') {
-                html = `
-                    <div style="display: flex; align-items: center; gap: 0.5rem;"><div style="width: 0.75rem; height: 0.75rem; background: rgb(34, 197, 94); border-radius: 2px;"></div><span>&lt; 5,000/km²</span></div>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;"><div style="width: 0.75rem; height: 0.75rem; background: rgb(234, 179, 8); border-radius: 2px;"></div><span>5,000–7,000/km²</span></div>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;"><div style="width: 0.75rem; height: 0.75rem; background: rgb(251, 146, 60); border-radius: 2px;"></div><span>7,000–9,000/km²</span></div>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;"><div style="width: 0.75rem; height: 0.75rem; background: rgb(251, 146, 60); border-radius: 2px;"></div><span>&gt; 9,000/km²</span></div>
-                `;
-            } else if (currentChoroplethIndicator.startsWith('pct_')) {
-                html = `
-                    <div style="display: flex; align-items: center; gap: 0.5rem;"><div style="width: 0.75rem; height: 0.75rem; background: rgb(147, 197, 253); border-radius: 2px;"></div><span>&lt; 10%</span></div>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;"><div style="width: 0.75rem; height: 0.75rem; background: rgb(96, 165, 250); border-radius: 2px;"></div><span>10–20%</span></div>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;"><div style="width: 0.75rem; height: 0.75rem; background: rgb(59, 130, 246); border-radius: 2px;"></div><span>20–30%</span></div>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;"><div style="width: 0.75rem; height: 0.75rem; background: rgb(37, 99, 235); border-radius: 2px;"></div><span>&gt; 30%</span></div>
-                `;
-            } else if (currentChoroplethIndicator === 'g_hhgro') {
-                html = `
-                    <div style="display: flex; align-items: center; gap: 0.5rem;"><div style="width: 0.75rem; height: 0.75rem; background: rgb(216, 180, 254); border-radius: 2px;"></div><span>&lt; 1.6</span></div>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;"><div style="width: 0.75rem; height: 0.75rem; background: rgb(192, 132, 252); border-radius: 2px;"></div><span>1.6–1.8</span></div>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;"><div style="width: 0.75rem; height: 0.75rem; background: rgb(168, 85, 247); border-radius: 2px;"></div><span>1.8–2.0</span></div>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;"><div style="width: 0.75rem; height: 0.75rem; background: rgb(147, 51, 234); border-radius: 2px;"></div><span>&gt; 2.0</span></div>
-                `;
-            }
-            legend.innerHTML = html;
+            const scale = getChoroplethScale();
+            legend.innerHTML = scale ? scale.colors.map((color, n) => `
+                <div style="display: flex; align-items: center; gap: 0.5rem;"><div style="width: 0.75rem; height: 0.75rem; background: ${color}; border-radius: 50%;"></div><span>${scale.labels[n]}${currentChoroplethIndicator === 'bev_dich' ? ' /km²' : ''}</span></div>`).join('') : '';
         }
 
         function renderNeighborhoodAreas() {
@@ -3256,15 +3241,44 @@
 
         // Noise Zones Data
         const noiseZones = [
-            { id: 1, area: { en: 'Highway A12 Corridor', nl: 'Snelweg A12 Corridor' }, level: 75, category: 'high' },
-            { id: 2, area: { en: 'City Center', nl: 'Stadscentrum' }, level: 68, category: 'high' },
-            { id: 3, area: { en: 'Train Station Area', nl: 'Stationsgebied' }, level: 72, category: 'high' },
-            { id: 4, area: { en: 'Scheveningen Beach', nl: 'Scheveningen Strand' }, level: 58, category: 'moderate' },
-            { id: 5, area: { en: 'Residential Segbroek', nl: 'Woonwijk Segbroek' }, level: 48, category: 'low' },
-            { id: 6, area: { en: 'Zuiderpark', nl: 'Zuiderpark' }, level: 42, category: 'low' },
-            { id: 7, area: { en: 'Industrial Zone', nl: 'Industriegebied' }, level: 70, category: 'high' },
-            { id: 8, area: { en: 'Haagse Bos', nl: 'Haagse Bos' }, level: 38, category: 'low' }
+            { id: 1, area: { en: 'Highway A12 Corridor', nl: 'Snelweg A12 Corridor' }, level: 75, category: 'high',
+              source: { en: 'Constant car and truck traffic on the A12', nl: 'Constant auto- en vrachtverkeer op de A12' } },
+            { id: 2, area: { en: 'City Center', nl: 'Stadscentrum' }, level: 68, category: 'high',
+              source: { en: 'Traffic, trams and busy streets, also in the evening', nl: 'Verkeer, trams en drukke straten, ook \'s avonds' } },
+            { id: 3, area: { en: 'Train Station Area', nl: 'Stationsgebied' }, level: 72, category: 'high',
+              source: { en: 'Trains, trams, buses and construction work', nl: 'Treinen, trams, bussen en bouwwerkzaamheden' } },
+            { id: 4, area: { en: 'Scheveningen Beach', nl: 'Scheveningen Strand' }, level: 58, category: 'moderate',
+              source: { en: 'Waves, wind and busy boulevard in summer', nl: 'Golven, wind en een drukke boulevard in de zomer' } },
+            { id: 5, area: { en: 'Residential Segbroek', nl: 'Woonwijk Segbroek' }, level: 48, category: 'low',
+              source: { en: 'Quiet residential streets with local traffic', nl: 'Rustige woonstraten met bestemmingsverkeer' } },
+            { id: 6, area: { en: 'Zuiderpark', nl: 'Zuiderpark' }, level: 42, category: 'low',
+              source: { en: 'Park sounds, some sports and events', nl: 'Parkgeluiden, soms sport en evenementen' } },
+            { id: 7, area: { en: 'Industrial Zone', nl: 'Industriegebied' }, level: 70, category: 'high',
+              source: { en: 'Trucks, loading and machines on working days', nl: 'Vrachtwagens, laden en machines op werkdagen' } },
+            { id: 8, area: { en: 'Haagse Bos', nl: 'Haagse Bos' }, level: 38, category: 'low',
+              source: { en: 'Mostly birds and wind in the trees', nl: 'Vooral vogels en wind in de bomen' } }
         ];
+
+        // WHO Environmental Noise Guidelines (2018): road traffic noise should stay below 53 dB on average
+        const WHO_NOISE_LIMIT = 53;
+
+        // Everyday sounds to compare a dB level with
+        function noiseComparison(level, lang) {
+            const items = [
+                { max: 40, en: 'as quiet as a library', nl: 'zo stil als een bibliotheek' },
+                { max: 50, en: 'like a quiet office or a fridge humming', nl: 'als een rustig kantoor of een zoemende koelkast' },
+                { max: 60, en: 'like a normal conversation', nl: 'als een normaal gesprek' },
+                { max: 70, en: 'like a busy street or a vacuum cleaner', nl: 'als een drukke straat of een stofzuiger' },
+                { max: 999, en: 'like standing next to a busy road', nl: 'als naast een drukke weg staan' }
+            ];
+            const item = items.find(x => level <= x.max);
+            return item[lang] || item.en;
+        }
+
+        // Every +10 dB sounds about twice as loud
+        function noiseLoudnessVs(level, reference) {
+            return Math.pow(2, (level - reference) / 10);
+        }
 
         let selectedNoiseZone = null;
 
@@ -3727,10 +3741,11 @@
                 onMapLoad: (map) => {
                     // Add neighborhood area polygons (choropleth)
                     denHaagAreas.forEach(area => {
+                        const areaColor = getPolygonColor(area);
                         const polygon = addZoneShape('demographics', area.id, {
-                            fillColor: '#8B5CF6',
-                            fillOpacity: 0.3,
-                            strokeColor: '#7C3AED',
+                            fillColor: areaColor,
+                            fillOpacity: 0.35,
+                            strokeColor: areaColor,
                             strokeOpacity: 1,
                             strokeWeight: 2,
                             clickable: true
@@ -3756,6 +3771,7 @@
                     </div>
                 `;
             }
+            updateChoroplethLegend();
         }
 
         function initNoiseMap() {
@@ -4186,7 +4202,7 @@
                 card.className = 'noise-zone-card';
                 card.setAttribute('data-zone-id', zone.id);
                 if (isSelected) card.classList.add('selected');
-                card.style.borderColor = isSelected ? 'rgba(167, 139, 250, 0.8)' : `rgba(${zone.category === 'high' ? '239, 68, 68' : zone.category === 'moderate' ? '234, 179, 8' : '34, 197, 94'}, 0.5)`;
+                card.style.borderColor = isSelected ? zoneColor : `rgba(${zone.category === 'high' ? '239, 68, 68' : zone.category === 'moderate' ? '234, 179, 8' : '34, 197, 94'}, 0.5)`;
                 card.onclick = () => { selectNoiseZone(zone.id); focusMapOn('noise', selectedNoiseZone); };
                 
                 card.innerHTML = `
@@ -4198,11 +4214,12 @@
                         </div>
                         <div style="flex: 1;">
                             <h3 style="color: ${zoneColor}; font-size: 1.2rem; font-weight: 600; margin: 0 0 0.25rem 0;">${zone.area[lang]}</h3>
-                            <p style="color: var(--text-slate-400); font-size: 0.875rem; margin: 0 0 0.5rem 0; text-transform: capitalize;">${zone.category} noise</p>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span class="noise-level-pill" style="background: ${bgColor}; color: ${zoneColor};">${noiseCategoryLabel(zone.category, lang)}</span>
+                            <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
                                 <span style="font-size: 1.5rem; font-weight: 700; color: ${zoneColor};">${zone.level} dB</span>
-                                <span style="font-size: 0.875rem; color: var(--text-slate-400);">${lang === 'en' ? 'Sound Level' : 'Geluidsniveau'}</span>
+                                <span style="font-size: 0.875rem; color: #CBD5E1;">${noiseComparison(zone.level, lang)}</span>
                             </div>
+                            <p style="margin: 0.4rem 0 0 0; color: #E2E8F0; font-size: 0.875rem;">${zone.source[lang]}</p>
                         </div>
                     </div>
                 `;
@@ -4228,41 +4245,67 @@
             }
         }
         
+        function noiseCategoryLabel(category, lang) {
+            const labels = {
+                high: { en: 'Loud', nl: 'Luid' },
+                moderate: { en: 'Moderate', nl: 'Gemiddeld' },
+                low: { en: 'Quiet', nl: 'Rustig' }
+            };
+            return (labels[category] || labels.moderate)[lang] || (labels[category] || labels.moderate).en;
+        }
+
         function createInlineNoiseZoneDetailCard(zone) {
             const lang = currentLanguage;
+            const en = lang === 'en';
             const zoneColor = getNoiseColor(zone.category);
             const iconPath = getNoiseIconPath(zone.category);
-            
+            const overWho = zone.level - WHO_NOISE_LIMIT;
+            const quietest = noiseZones.reduce((a, b) => (a.level <= b.level ? a : b));
+            const times = noiseLoudnessVs(zone.level, quietest.level);
+
+            // Scale from 30 to 90 dB with this zone and the WHO advice marked
+            const pos = (db) => Math.max(0, Math.min(100, ((db - 30) / 60) * 100));
+            const scaleRefs = [
+                { db: 40, en: 'Library', nl: 'Bibliotheek' },
+                { db: 60, en: 'Conversation', nl: 'Gesprek' },
+                { db: 80, en: 'Busy road', nl: 'Drukke weg' }
+            ];
+
             const detailCard = document.createElement('div');
             detailCard.className = 'noise-zone-detail-card noise-zone-detail-card-inline';
-            detailCard.style.cssText = 'grid-column: 1 / -1; padding: 1.5rem; background: rgba(15, 23, 42, 0.95); border: 2px solid rgba(139, 92, 246, 0.5); border-radius: var(--radius-lg); margin-top: 0.5rem;';
-            
+            detailCard.style.cssText = `grid-column: 1 / -1; padding: 1.5rem; background: rgba(15, 23, 42, 0.97); border: 2px solid ${zoneColor}; border-radius: var(--radius-lg); margin-top: 0.25rem;`;
+
+            const metric = (label, value, sub) => `
+                <div class="noise-metric">
+                    <p class="noise-metric-label">${label}</p>
+                    <p class="noise-metric-value">${value}</p>
+                    ${sub ? `<p class="noise-metric-sub">${sub}</p>` : ''}
+                </div>`;
+
             detailCard.innerHTML = `
                 <div class="noise-zone-detail-header" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 2rem; height: 2rem; color: ${zoneColor}; flex-shrink: 0;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 2rem; height: 2rem; color: ${zoneColor}; flex-shrink: 0;">
                         ${iconPath}
                     </svg>
                     <div>
-                        <h3 style="color: rgb(167, 139, 250); font-size: 1.5rem; font-weight: 700; margin: 0 0 0.25rem 0;">${zone.area[lang]}</h3>
-                        <p style="color: var(--text-slate-400); font-size: 0.875rem; margin: 0; text-transform: capitalize;">${lang === 'en' ? 'Noise Level:' : 'Geluidsniveau:'} ${zone.category}</p>
+                        <h3 style="color: ${zoneColor}; font-size: 1.5rem; font-weight: 700; margin: 0 0 0.25rem 0;">${zone.area[lang]}</h3>
+                        <p style="color: #CBD5E1; font-size: 0.9rem; margin: 0;">${zone.source[lang]}</p>
                     </div>
                 </div>
-                <div class="noise-zone-detail-metrics" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
-                    <div class="noise-detail-metric" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border-radius: var(--radius-lg);">
-                        <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.25rem;">${lang === 'en' ? 'Sound Level' : 'Geluidsniveau'}</p>
-                        <p style="font-size: 1.5rem; font-weight: 700; color: var(--text-slate-200); margin: 0;">${zone.level} dB</p>
-                    </div>
-                    <div class="noise-detail-metric" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border-radius: var(--radius-lg);">
-                        <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.25rem;">${lang === 'en' ? 'Category' : 'Categorie'}</p>
-                        <p style="font-size: 1.1rem; font-weight: 600; color: var(--text-slate-200); margin: 0; text-transform: capitalize;">${zone.category}</p>
-                    </div>
-                    <div class="noise-detail-metric" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border-radius: var(--radius-lg);">
-                        <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.25rem;">${lang === 'en' ? 'Trend' : 'Trend'}</p>
-                        <p style="font-size: 1.1rem; font-weight: 600; color: var(--text-slate-200); margin: 0;">${zone.category === 'high' ? '→ Stable' : '↓ -2 dB'}</p>
-                    </div>
+                <div class="noise-metrics">
+                    ${metric(en ? 'Average sound level' : 'Gemiddeld geluidsniveau', `${zone.level} dB`, noiseComparison(zone.level, lang))}
+                    ${metric(en ? 'Compared with WHO advice' : 'Vergeleken met WHO-advies', overWho > 0 ? `+${overWho} dB` : `${overWho} dB`, overWho > 0 ? (en ? `Above the ${WHO_NOISE_LIMIT} dB limit` : `Boven de grens van ${WHO_NOISE_LIMIT} dB`) : (en ? `Within the ${WHO_NOISE_LIMIT} dB limit` : `Binnen de grens van ${WHO_NOISE_LIMIT} dB`))}
+                    ${metric(en ? `Compared with ${quietest.area.en}` : `Vergeleken met ${quietest.area.nl}`, zone.id === quietest.id ? (en ? 'Quietest' : 'Stilste') : `${times.toFixed(times < 10 ? 1 : 0)}×`, zone.id === quietest.id ? '' : (en ? 'as loud' : 'zo luid'))}
                 </div>
+                <div class="noise-scale" aria-hidden="true">
+                    <div class="noise-scale-bar"></div>
+                    <div class="noise-scale-who" style="left: ${pos(WHO_NOISE_LIMIT)}%;"><span>WHO ${WHO_NOISE_LIMIT} dB</span></div>
+                    <div class="noise-scale-marker" style="left: ${pos(zone.level)}%; background: ${zoneColor};"><span style="color: ${zoneColor};">${zone.level} dB</span></div>
+                    ${scaleRefs.map(r => `<div class="noise-scale-ref" style="left: ${pos(r.db)}%;"><span>${r[lang] || r.en}<br>${r.db} dB</span></div>`).join('')}
+                </div>
+                <p class="noise-note">${en ? 'Every 10 dB more sounds about twice as loud. Long exposure above the WHO advice is linked to stress and poor sleep.' : 'Elke 10 dB meer klinkt ongeveer twee keer zo luid. Langdurig boven het WHO-advies hangt samen met stress en slecht slapen.'}</p>
             `;
-            
+
             return detailCard;
         }
 
@@ -4285,25 +4328,7 @@
         }
 
         function renderNoiseZoneDetails(zone) {
-            const lang = currentLanguage;
-            const zoneColor = getNoiseColor(zone.category);
-            const iconPath = getNoiseIconPath(zone.category);
-            
-            // Update header
-            document.getElementById('noise-zone-name').textContent = zone.area[lang];
-            document.getElementById('noise-zone-category').textContent = 
-                (lang === 'en' ? 'Noise Level:' : 'Geluidsniveau:') + ' ' + zone.category;
-            
-            // Update icon
-            const icon = document.getElementById('noise-zone-icon');
-            icon.innerHTML = iconPath;
-            icon.style.color = zoneColor;
-            
-            // Update metrics
-            document.getElementById('noise-zone-level').textContent = zone.level + ' dB';
-            document.getElementById('noise-zone-category-value').textContent = zone.category;
-            document.getElementById('noise-zone-trend').textContent = 
-                zone.category === 'high' ? '→ Stable' : '↓ -2 dB';
+            // Details are shown inline (createInlineNoiseZoneDetailCard)
         }
 
         function updateNoiseSummary() {
