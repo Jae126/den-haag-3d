@@ -2927,9 +2927,9 @@
 
         // Small illustrated icons for parks (round tree) and forests (two pines)
         function greenTypeIcon(type, size) {
-            const park = `<svg viewBox="0 0 32 32" width="${size}" height="${size}" aria-hidden="true"><circle cx="16" cy="12.5" r="8.5" fill="#4ADE80"/><circle cx="12.5" cy="10" r="3" fill="#86EFAC"/><rect x="14.5" y="18" width="3" height="9" rx="1.5" fill="#A16207"/><path d="M9 27.5h14" stroke="#22C55E" stroke-width="2" stroke-linecap="round"/></svg>`;
-            const forest = `<svg viewBox="0 0 32 32" width="${size}" height="${size}" aria-hidden="true"><path d="M11 4 4.5 16h3.5L4 23h14l-4-7h3.5Z" fill="#16A34A"/><path d="M21.5 7 16 17h3l-3.5 6h12L24 17h3Z" fill="#4ADE80"/><rect x="10" y="22.5" width="2" height="5" rx="1" fill="#A16207"/><rect x="20.5" y="22.5" width="2" height="5" rx="1" fill="#A16207"/></svg>`;
-            return type === 'forest' ? forest : park;
+            const color = type === 'forest' ? 'rgb(5, 150, 105)' : 'rgb(16, 185, 129)';
+            const px = Math.round(size * 0.7);
+            return `<svg viewBox="0 0 24 24" width="${px}" height="${px}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17Z"/><path d="M12 22v-3"/></svg>`;
         }
 
         // Map marker: a simple tree silhouette (park) or pine (forest) with a white outline
@@ -3064,7 +3064,7 @@
                     ${travel ? metric(en ? 'Walk' : 'Lopen', `${travel.walk} min`, formatGreenDistance(travel.meters)) : ''}
                     ${travel ? metric(en ? 'Bike' : 'Fiets', `${travel.bike} min`, '') : ''}
                     ${transit ? metric(en ? 'Public transport' : 'Openbaar vervoer', `${transit.minutes} min`, `${transit.lines} · ${en ? 'incl. walking' : 'incl. lopen'}`) : metric(en ? 'Public transport' : 'Openbaar vervoer', '—', travel && travel.walk <= 30 ? (en ? 'Walking or cycling is quickest' : 'Lopen of fietsen is het snelst') : (en ? 'No direct tram or bus in our data' : 'Geen directe tram of bus in onze gegevens'))}
-                    ${stopUseful ? metric(en ? 'Nearest stop' : 'Dichtstbijzijnde halte', stop.stop.name[lang] || stop.stop.name.en, `${(stop.stop.lines || []).join(', ')} · ${formatGreenDistance(stop.distance)}`) : ''}
+                    ${stopUseful ? metric(en ? 'Nearest stop' : 'Dichtstbijzijnde halte', `<span style="font-size: 1rem;">${stop.stop.name[lang] || stop.stop.name.en}</span>`, `${(stop.stop.lines || []).join(', ')} · ${formatGreenDistance(stop.distance)}`) : ''}
                 </div>
 
                 <p class="green-section-title">${en ? 'Weather there now' : 'Weer daar nu'}</p>
@@ -3076,10 +3076,6 @@
                 </div>
 ` : `<p class="green-card-text">${greenWeather.status === 'error' ? (en ? 'Live weather is not available right now.' : 'Live weer is nu niet beschikbaar.') : (en ? 'Loading live weather…' : 'Live weer laden…')}</p>`}
 
-                <p class="green-section-title">${en ? 'What you can do' : 'Wat je er kunt doen'}</p>
-                <div class="facilities-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                    ${space.facilities[lang].map(f => `<span class="green-chip">${f}</span>`).join('')}
-                </div>
             `;
 
             return detailCard;
@@ -3676,17 +3672,17 @@
                 onMapLoad: (map) => {
                     // Add green space markers
                     greenSpaces.forEach(space => {
-                        const loc = getMapLocation('green', space.id) || DEN_HAAG_CENTER;
-                        const icon = L.divIcon({
-                            className: 'green-marker',
-                            html: greenMarkerSvg(space.type),
-                            iconSize: [30, 34],
-                            iconAnchor: [15, 33]
+                        const marker = mapInstances['green'].addMarker({
+                            position: getMapLocation('green', space.id) || DEN_HAAG_CENTER,
+                            icon: {
+                                fillColor: space.type === 'forest' ? '#059669' : '#10B981',
+                                fillOpacity: 1,
+                                strokeColor: '#FFFFFF',
+                                strokeWeight: 2,
+                                scale: 10
+                            },
+                            title: space.name
                         });
-                        const marker = L.marker([loc.lat, loc.lng], { icon, title: space.name, riseOnHover: true }).addTo(map);
-                        marker.bindTooltip(space.name, { direction: 'top', offset: [0, -46] });
-                        marker.addListener = function(eventName, fn) { this.on(eventName, fn); return this; };
-                        mapInstances['green'].markers.push(marker);
                         registerMapShape('green', space.id, marker);
                         if (marker) {
                             marker.addListener('click', () => {
@@ -3704,11 +3700,11 @@
                         <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.5rem; font-weight: 500;">Green Spaces</p>
                         <div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.75rem; color: var(--text-slate-300);">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <span style="display: inline-flex; width: 16px;">${greenMarkerSvg('park').replace('width="30" height="34"', 'width="14" height="16"')}</span>
+                                <div style="width: 0.75rem; height: 0.75rem; background: rgb(16, 185, 129); border-radius: 50%;"></div>
                                 <span>${greenTypeLabel('park', currentLanguage)}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <span style="display: inline-flex; width: 16px;">${greenMarkerSvg('forest').replace('width="30" height="34"', 'width="14" height="16"')}</span>
+                                <div style="width: 0.75rem; height: 0.75rem; background: rgb(5, 150, 105); border-radius: 50%;"></div>
                                 <span>${greenTypeLabel('forest', currentLanguage)}</span>
                             </div>
                         </div>
