@@ -2030,3 +2030,62 @@ body {
 }
 .heat-hour-time { color: #CBD5E1; font-size: 0.8rem; }
 .heat-hour-temp { font-size: 1.05rem; font-weight: 700; }
+
+/* ---------- Green spaces ---------- */
+.green-space-card {
+  display: flex; flex-direction: column; gap: 0.7rem;
+  background: rgba(15, 23, 42, 0.96);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.green-space-card:hover { transform: translateY(-2px); background: rgba(30, 41, 59, 0.97); }
+.green-space-card.selected { background: rgba(30, 41, 59, 0.97); }
+.green-card-top { display: flex; align-items: center; gap: 0.75rem; }
+.green-card-icon {
+  width: 3rem; height: 3rem; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 0.9rem; background: rgba(34, 197, 94, 0.15);
+}
+.green-card-icon.is-large { width: 3.75rem; height: 3.75rem; }
+.green-card-title { margin: 0 0 0.3rem 0; color: rgb(74, 222, 128); font-size: 1.2rem; font-weight: 600; line-height: 1.25; }
+.green-type-pill {
+  display: inline-block; padding: 0.15rem 0.6rem; border-radius: 9999px;
+  background: rgba(34, 197, 94, 0.18); color: #86EFAC; font-size: 0.75rem; font-weight: 600;
+}
+.green-card-text { margin: 0; color: #E2E8F0; font-size: 0.9rem; line-height: 1.5; }
+.green-card-facts { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: auto; }
+.green-fact {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.3rem 0.65rem; border-radius: 9999px;
+  background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(71, 85, 105, 0.6);
+  color: #E2E8F0; font-size: 0.8rem;
+}
+.green-fact svg { width: 0.95rem; height: 0.95rem; color: #86EFAC; }
+.green-fact.is-good { border-color: rgba(74, 222, 128, 0.5); color: #BBF7D0; }
+.green-fact.is-bad { border-color: rgba(56, 189, 248, 0.5); color: #BAE6FD; }
+.green-section-title { margin: 1.1rem 0 0.5rem 0; color: #F1F5F9; font-size: 0.9rem; font-weight: 600; }
+.green-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+.green-metric { padding: 0.8rem 1rem; border-radius: var(--radius-lg); background: rgba(30, 41, 59, 0.6); }
+.green-metric-label { margin: 0 0 0.2rem 0; color: #CBD5E1; font-size: 0.8rem; }
+.green-metric-value { margin: 0; color: #F8FAFC; font-size: 1.15rem; font-weight: 700; }
+.green-metric-sub { margin: 0.2rem 0 0 0; color: #CBD5E1; font-size: 0.8rem; }
+.green-outlook { margin: 0.6rem 0 0 0; padding: 0.6rem 0.9rem; border-radius: var(--radius-lg); font-size: 0.9rem; }
+.green-outlook.is-good { background: rgba(22, 101, 52, 0.45); color: #BBF7D0; }
+.green-outlook.is-bad { background: rgba(12, 74, 110, 0.5); color: #BAE6FD; }
+.green-chip { padding: 0.3rem 0.8rem; border-radius: 9999px; background: rgba(34, 197, 94, 0.18); color: #86EFAC; font-size: 0.8rem; }
+
+/* Map markers: little pins with a tree inside */
+.green-marker { background: none; border: none; }
+.green-marker-pin {
+  position: relative; width: 42px; height: 42px; border-radius: 50% 50% 50% 8px;
+  transform: rotate(-45deg);
+  display: flex; align-items: center; justify-content: center;
+  background: #F0FDF4; border: 3px solid #22C55E;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s ease;
+}
+.green-marker-pin.is-forest { border-color: #15803D; background: #DCFCE7; }
+.green-marker-pin svg { transform: rotate(45deg); }
+.leaflet-marker-icon.is-active .green-marker-pin,
+.green-marker:hover .green-marker-pin { transform: rotate(-45deg) scale(1.2); }
+.leaflet-marker-icon.is-active .green-marker-pin { border-color: #FACC15; }
+@media (prefers-reduced-motion: reduce) { .green-marker-pin { transition: none; } }

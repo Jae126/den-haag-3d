@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Den Haag in 3D</title>
-    <link rel="stylesheet" href="css/style.css?v=10">
+    <link rel="stylesheet" href="css/style.css?v=11">
     <!-- Free map: Leaflet + OpenStreetMap (no API key needed) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -717,24 +717,8 @@
                                 </div>
                             </div>
 
-                            <!-- Summary Cards -->
-                            <div class="green-summary-cards">
-                                <div class="summary-card" style="border-color: rgba(34, 197, 94, 0.5);">
-                                    <h4 style="color: rgb(74, 222, 128); font-weight: 600;">Total Green Spaces</h4>
-                                    <p style="color: var(--text-slate-300); font-size: 2rem; font-weight: 700;">6</p>
-                                    <p style="color: var(--text-slate-500); font-size: 0.875rem;">Parks & Forests</p>
-                                </div>
-                                <div class="summary-card" style="border-color: rgba(16, 185, 129, 0.5);">
-                                    <h4 style="color: rgb(52, 211, 153); font-weight: 600;">Total Trees</h4>
-                                    <p id="total-trees" style="color: var(--text-slate-300); font-size: 2rem; font-weight: 700;">~10,400</p>
-                                    <p style="color: var(--text-slate-500); font-size: 0.875rem;">Estimated</p>
-                                </div>
-                                <div class="summary-card" style="border-color: rgba(6, 182, 212, 0.5);">
-                                    <h4 style="color: rgb(34, 211, 238); font-weight: 600;">Largest Park</h4>
-                                    <p style="color: var(--text-slate-300); font-size: 2rem; font-weight: 700;">145 ha</p>
-                                    <p style="color: var(--text-slate-500); font-size: 0.875rem;">Haagse Bos</p>
-                                </div>
-                            </div>
+                            <!-- Summary (closest park and today's weather) -->
+                            <div id="green-summary" class="green-summary-cards"></div>
                         </div>
                     </div>
 
@@ -1339,7 +1323,7 @@
         function registerMapShape(layer, id, shape) {
             if (!shape) return;
             if (!mapShapes[layer]) mapShapes[layer] = {};
-            mapShapes[layer][id] = { shape, base: { weight: shape.options.weight, fillOpacity: shape.options.fillOpacity, radius: shape._isDot ? shape.getRadius() : null } };
+            mapShapes[layer][id] = { shape, base: shape instanceof L.Marker ? {} : { weight: shape.options.weight, fillOpacity: shape.options.fillOpacity, radius: shape._isDot ? shape.getRadius() : null } };
         }
 
         // Draw an area as a circle at its MAP_LOCATIONS position
@@ -1362,7 +1346,11 @@
             Object.keys(shapes).forEach(key => {
                 const { shape, base } = shapes[key];
                 const active = id !== null && String(key) === String(id);
-                if (shape._isDot) {
+                if (shape instanceof L.Marker) {
+                    const el = shape.getElement();
+                    if (el) el.classList.toggle('is-active', active);
+                    shape.setZIndexOffset(active ? 1000 : 0);
+                } else if (shape._isDot) {
                     shape.setRadius(active ? base.radius + 5 : base.radius);
                     shape.setStyle({ weight: active ? 4 : base.weight });
                 } else {
@@ -1372,7 +1360,7 @@
                     });
                 }
                 if (active) {
-                    shape.bringToFront();
+                    if (shape.bringToFront) shape.bringToFront();
                     if (shape.getTooltip()) shape.openTooltip(); 
                 } else if (shape.getTooltip()) {
                     shape.closeTooltip();
@@ -1748,6 +1736,7 @@
                 if (layerId === 'green') {
                     initGreenSpacesMap();
                     renderGreenSpaces();
+                    loadGreenWeather();
                 }
                 
                 // Initialize demographics layer if selected
@@ -2813,13 +2802,121 @@
 
         // Green Spaces Data
         const greenSpaces = [
-            { id: 1, name: 'Zuiderpark', type: 'park', area: '120 ha', trees: 2400, facilities: { en: ['Playground', 'Sports fields', 'Pond'], nl: ['Speeltuin', 'Sportvelden', 'Vijver'] }, description: { en: 'Large recreational park with sports facilities', nl: 'Groot recreatiepark met sportfaciliteiten' } },
-            { id: 2, name: 'Haagse Bos', type: 'forest', area: '145 ha', trees: 3200, facilities: { en: ['Walking trails', 'Wildlife'], nl: ['Wandelpaden', 'Wildlife'] }, description: { en: 'Historic forest area with walking paths', nl: 'Historisch bosgebied met wandelpaden' } },
-            { id: 3, name: 'Westbroekpark', type: 'park', area: '18 ha', trees: 850, facilities: { en: ['Rose garden', 'Pond', 'Playground'], nl: ['Rozentuin', 'Vijver', 'Speeltuin'] }, description: { en: 'Beautiful park with famous rose garden', nl: 'Prachtig park met beroemde rozentuin' } },
-            { id: 4, name: 'Scheveningse Bosjes', type: 'forest', area: '42 ha', trees: 1800, facilities: { en: ['Cycling paths', 'Dog area'], nl: ['Fietspaden', 'Hondengebied'] }, description: { en: 'Coastal woodland with cycling trails', nl: 'Kustbos met fietspaden' } },
-            { id: 5, name: 'Clingendael Park', type: 'park', area: '32 ha', trees: 1200, facilities: { en: ['Japanese garden', 'Estate'], nl: ['Japanse tuin', 'Landgoed'] }, description: { en: 'Historic estate with Japanese garden', nl: 'Historisch landgoed met Japanse tuin' } },
-            { id: 6, name: 'Ockenburg', type: 'park', area: '28 ha', trees: 950, facilities: { en: ['Picnic area', 'Playground'], nl: ['Picknickplaats', 'Speeltuin'] }, description: { en: 'Green recreation area near beach', nl: 'Groen recreatiegebied bij strand' } }
+            { id: 1, name: 'Zuiderpark', type: 'park',
+              facilities: { en: ['Playgrounds', 'Sports fields', 'Open-air theatre', 'Ponds'], nl: ['Speeltuinen', 'Sportvelden', 'Openluchttheater', 'Vijvers'] },
+              highlight: { en: 'One of the biggest city parks, with room for sports, picnics and summer shows.', nl: 'Een van de grootste stadsparken, met ruimte voor sport, picknicks en zomervoorstellingen.' } },
+            { id: 2, name: 'Haagse Bos', type: 'forest',
+              facilities: { en: ['Walking trails', 'Ponds', 'Next to Huis ten Bosch'], nl: ['Wandelpaden', 'Vijvers', 'Naast Huis ten Bosch'] },
+              highlight: { en: 'An old forest right next to the city centre, beside the royal palace Huis ten Bosch.', nl: 'Een oud bos vlak bij het centrum, naast paleis Huis ten Bosch.' } },
+            { id: 3, name: 'Westbroekpark', type: 'park',
+              facilities: { en: ['Rose garden', 'Pond', 'Playground', 'Café'], nl: ['Rozentuin', 'Vijver', 'Speeltuin', 'Café'] },
+              highlight: { en: 'Famous for its rose garden with thousands of roses, at its best from June to September.', nl: 'Bekend om de rozentuin met duizenden rozen, op zijn mooist van juni tot september.' } },
+            { id: 4, name: 'Scheveningse Bosjes', type: 'forest',
+              facilities: { en: ['Cycling paths', 'Walking trails', 'Dog area'], nl: ['Fietspaden', 'Wandelpaden', 'Hondenlosloopgebied'] },
+              highlight: { en: 'Woodland between the city and the sea, great for a walk or bike ride to the beach.', nl: 'Bos tussen de stad en de zee, fijn voor een wandeling of fietstocht naar het strand.' } },
+            { id: 5, name: 'Clingendael', type: 'park',
+              facilities: { en: ['Japanese garden', 'Estate', 'Walking trails'], nl: ['Japanse tuin', 'Landgoed', 'Wandelpaden'] },
+              highlight: { en: 'Estate park with a Japanese garden that only opens for a few weeks in spring and autumn.', nl: 'Landgoed met een Japanse tuin die alleen een paar weken in het voorjaar en najaar open is.' } },
+            { id: 6, name: 'Ockenburg', type: 'park',
+              facilities: { en: ['Picnic area', 'Playground', 'Near Kijkduin beach'], nl: ['Picknickplek', 'Speeltuin', 'Bij strand Kijkduin'] },
+              highlight: { en: 'Green estate close to Kijkduin beach, nice for a picnic after the beach.', nl: 'Groen landgoed vlak bij strand Kijkduin, fijn voor een picknick na het strand.' } }
         ];
+
+        // Travel estimates from the kiosk (Den Haag Centraal) and live weather per park
+        const GREEN_ORIGIN = { lat: 52.0805, lng: 4.3245, name: 'Den Haag Centraal' };
+        const greenWeather = { status: 'idle', byId: {}, fetchedAt: 0 };
+
+        function greenDistance(a, b) {
+            const R = 6371000, toRad = d => d * Math.PI / 180;
+            const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
+            const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+            return 2 * R * Math.asin(Math.sqrt(h));
+        }
+
+        function greenTravel(space) {
+            const loc = MAP_LOCATIONS.green[space.id];
+            if (!loc) return null;
+            const meters = greenDistance(GREEN_ORIGIN, loc) * 1.3; // streets are not straight lines
+            return {
+                meters,
+                walk: Math.max(1, Math.round(meters / 80)),
+                bike: Math.max(1, Math.round(meters / 250))
+            };
+        }
+
+        function formatGreenDistance(m) {
+            return m < 1000 ? `${Math.round(m / 50) * 50} m` : `${(m / 1000).toFixed(1)} km`;
+        }
+
+        function nearestStopTo(loc) {
+            return (window.transportStops || [])
+                .map(stop => ({ stop, distance: greenDistance(loc, stop.position) }))
+                .sort((a, b) => a.distance - b.distance)[0] || null;
+        }
+
+        async function loadGreenWeather() {
+            if (greenWeather.status === 'loading') return;
+            if (greenWeather.status === 'ok' && Date.now() - greenWeather.fetchedAt < 15 * 60 * 1000) return;
+            greenWeather.status = 'loading';
+            const spaces = greenSpaces.filter(space => MAP_LOCATIONS.green[space.id]);
+            const url = 'https://api.open-meteo.com/v1/forecast'
+                + '?latitude=' + spaces.map(sp => MAP_LOCATIONS.green[sp.id].lat).join(',')
+                + '&longitude=' + spaces.map(sp => MAP_LOCATIONS.green[sp.id].lng).join(',')
+                + '&current=temperature_2m,precipitation,wind_speed_10m&hourly=precipitation_probability&forecast_days=2&timezone=Europe%2FAmsterdam';
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                let data = await response.json();
+                if (!Array.isArray(data)) data = [data];
+                spaces.forEach((space, n) => {
+                    const d = data[n];
+                    if (!d || !d.current) return;
+                    const nowHour = d.current.time.slice(0, 13);
+                    const start = Math.max(0, d.hourly.time.findIndex(t => t.slice(0, 13) === nowHour));
+                    const next3 = d.hourly.precipitation_probability.slice(start, start + 3).filter(v => v !== null);
+                    greenWeather.byId[space.id] = {
+                        temp: d.current.temperature_2m,
+                        raining: d.current.precipitation > 0,
+                        wind: d.current.wind_speed_10m,
+                        rainChance: next3.length ? Math.max(...next3) : null
+                    };
+                });
+                greenWeather.status = Object.keys(greenWeather.byId).length ? 'ok' : 'error';
+                greenWeather.fetchedAt = Date.now();
+            } catch (error) {
+                console.warn('[Green] Live weather unavailable:', error);
+                greenWeather.status = 'error';
+            }
+            if (!document.getElementById('green-detail').classList.contains('hidden')) {
+                renderGreenSpaces();
+            }
+        }
+
+        // Short verdict for "is it nice to go now?"
+        function greenOutlook(weather, en) {
+            if (!weather) return null;
+            if (weather.raining || (weather.rainChance !== null && weather.rainChance >= 60)) {
+                return { good: false, text: en ? 'Rain likely, bring an umbrella' : 'Kans op regen, neem een paraplu mee' };
+            }
+            if (weather.wind >= 40) {
+                return { good: false, text: en ? 'Very windy right now' : 'Nu erg winderig' };
+            }
+            if (weather.temp < 5) {
+                return { good: false, text: en ? 'Cold, dress warmly' : 'Koud, kleed je warm aan' };
+            }
+            return { good: true, text: en ? 'Good weather for a visit' : 'Goed weer voor een bezoek' };
+        }
+
+        // Small illustrated icons for parks (round tree) and forests (two pines)
+        function greenTypeIcon(type, size) {
+            const park = `<svg viewBox="0 0 32 32" width="${size}" height="${size}" aria-hidden="true"><circle cx="16" cy="12.5" r="8.5" fill="#4ADE80"/><circle cx="12.5" cy="10" r="3" fill="#86EFAC"/><rect x="14.5" y="18" width="3" height="9" rx="1.5" fill="#A16207"/><path d="M9 27.5h14" stroke="#22C55E" stroke-width="2" stroke-linecap="round"/></svg>`;
+            const forest = `<svg viewBox="0 0 32 32" width="${size}" height="${size}" aria-hidden="true"><path d="M11 4 4.5 16h3.5L4 23h14l-4-7h3.5Z" fill="#16A34A"/><path d="M21.5 7 16 17h3l-3.5 6h12L24 17h3Z" fill="#4ADE80"/><rect x="10" y="22.5" width="2" height="5" rx="1" fill="#A16207"/><rect x="20.5" y="22.5" width="2" height="5" rx="1" fill="#A16207"/></svg>`;
+            return type === 'forest' ? forest : park;
+        }
+
+        function greenTypeLabel(type, lang) {
+            return type === 'forest' ? (lang === 'en' ? 'Forest' : 'Bos') : (lang === 'en' ? 'Park' : 'Park');
+        }
 
         let selectedGreenSpace = null;
 
@@ -2841,43 +2938,44 @@
                 if (isSelected) {
                     selectedCardIndex = index;
                 }
-                const typeColor = space.type === 'forest' ? 'rgb(5, 150, 105)' : 'rgb(16, 185, 129)';
-                const typeBg = space.type === 'forest' ? 'rgba(5, 150, 105, 0.2)' : 'rgba(16, 185, 129, 0.2)';
-                
+                const travel = greenTravel(space);
+                const en = lang === 'en';
+                const weather = greenWeather.byId[space.id];
+                const outlook = greenOutlook(weather, en);
+
                 const card = document.createElement('div');
                 card.className = 'green-space-card';
                 card.setAttribute('data-space-id', space.id);
                 if (isSelected) card.classList.add('selected');
-                card.style.borderColor = isSelected ? 'rgba(74, 222, 128, 0.8)' : 'rgba(34, 197, 94, 0.5)';
+                card.style.borderColor = isSelected ? 'rgba(74, 222, 128, 0.9)' : 'rgba(34, 197, 94, 0.45)';
                 card.onclick = () => { selectGreenSpace(space.id); focusMapOn('green', selectedGreenSpace); };
-                
+
                 card.innerHTML = `
-                    <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
-                        <div style="padding: 0.75rem; background: ${typeBg}; border-radius: var(--radius-lg);">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1.5rem; height: 1.5rem; color: ${typeColor};">
-                                <path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17Z" stroke-linejoin="round"/><path d="M12 22v-3" stroke-linecap="round"/>
-                            </svg>
+                    <div class="green-card-top">
+                        <span class="green-card-icon">${greenTypeIcon(space.type, 34)}</span>
+                        <div style="flex: 1; min-width: 0;">
+                            <h3 class="green-card-title">${space.name}</h3>
+                            <span class="green-type-pill">${greenTypeLabel(space.type, lang)}</span>
                         </div>
-                        <div style="flex: 1;">
-                            <h3 style="color: rgb(74, 222, 128); font-size: 1.2rem; font-weight: 600; margin: 0 0 0.25rem 0;">${space.name}</h3>
-                            <p style="color: var(--text-slate-400); font-size: 0.875rem; margin: 0 0 0.5rem 0; text-transform: capitalize;">${space.type}</p>
-                            <p style="color: var(--text-slate-300); font-size: 0.875rem; margin: 0 0 0.75rem 0;">${space.description[lang]}</p>
-                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
-                                <div>
-                                    <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.25rem;">${lang === 'en' ? 'Area' : 'Oppervlakte'}</p>
-                                    <p style="font-size: 1rem; font-weight: 600; color: var(--text-slate-200); margin: 0;">${space.area}</p>
-                                </div>
-                                <div>
-                                    <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.25rem;">${lang === 'en' ? 'Trees' : 'Bomen'}</p>
-                                    <p style="font-size: 1rem; font-weight: 600; color: var(--text-slate-200); margin: 0;">~${space.trees.toLocaleString()}</p>
-                                </div>
-                            </div>
-                        </div>
+                    </div>
+                    <p class="green-card-text">${space.highlight[lang]}</p>
+                    <div class="green-card-facts">
+                        ${travel ? `<span class="green-fact" title="${en ? 'From Den Haag Centraal' : 'Vanaf Den Haag Centraal'}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13" cy="4" r="2"/><path d="m9 20 3-6 3 3v4"/><path d="m6 8 4-2 3 3 3 1"/><path d="M10 12l-2 3"/></svg>
+                            ${travel.walk} min
+                        </span>
+                        <span class="green-fact">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg>
+                            ${travel.bike} min
+                        </span>` : ''}
+                        ${outlook ? `<span class="green-fact ${outlook.good ? 'is-good' : 'is-bad'}">${weather ? Math.round(weather.temp) + '°C · ' : ''}${outlook.text}</span>` : ''}
                     </div>
                 `;
                 container.appendChild(card);
             });
             
+            renderGreenSummary();
+
             // If a card is selected, insert detail card after its row
             if (selectedCardIndex >= 0) {
                 const selectedSpace = greenSpaces[selectedCardIndex];
@@ -2899,47 +2997,79 @@
         
         function createInlineGreenSpaceDetailCard(space) {
             const lang = currentLanguage;
-            const typeColor = space.type === 'forest' ? 'rgb(5, 150, 105)' : 'rgb(16, 185, 129)';
-            const typeBg = space.type === 'forest' ? 'rgba(5, 150, 105, 0.2)' : 'rgba(16, 185, 129, 0.2)';
-            
+            const en = lang === 'en';
+            const travel = greenTravel(space);
+            const loc = MAP_LOCATIONS.green[space.id];
+            const stop = loc ? nearestStopTo(loc) : null;
+            const weather = greenWeather.byId[space.id];
+            const outlook = greenOutlook(weather, en);
+
             const detailCard = document.createElement('div');
             detailCard.className = 'green-space-detail-card green-space-detail-card-inline';
-            detailCard.style.cssText = 'grid-column: 1 / -1; padding: 1.5rem; background: rgba(15, 23, 42, 0.95); border: 2px solid rgba(34, 197, 94, 0.5); border-radius: var(--radius-lg); margin-top: 0.5rem;';
-            
+            detailCard.style.cssText = 'grid-column: 1 / -1; padding: 1.5rem; background: rgba(15, 23, 42, 0.97); border: 2px solid rgba(74, 222, 128, 0.8); border-radius: var(--radius-lg); margin-top: 0.25rem;';
+
+            const metric = (label, value, sub) => `
+                <div class="green-metric">
+                    <p class="green-metric-label">${label}</p>
+                    <p class="green-metric-value">${value}</p>
+                    ${sub ? `<p class="green-metric-sub">${sub}</p>` : ''}
+                </div>`;
+            const stopUseful = stop && stop.distance <= 1500;
+
             detailCard.innerHTML = `
-                <div class="green-space-detail-header" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-                    <div class="green-space-icon-box" style="padding: 0.75rem; background: ${typeBg}; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 2rem; height: 2rem; color: ${typeColor};">
-                            <path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17Z" stroke-linejoin="round"/><path d="M12 22v-3" stroke-linecap="round"/>
-                        </svg>
-                    </div>
+                <div class="green-card-top" style="margin-bottom: 0.75rem;">
+                    <span class="green-card-icon is-large">${greenTypeIcon(space.type, 44)}</span>
                     <div>
-                        <h3 style="color: rgb(74, 222, 128); font-size: 1.5rem; font-weight: 700; margin: 0 0 0.25rem 0;">${space.name}</h3>
-                        <p style="color: var(--text-slate-400); font-size: 0.875rem; margin: 0; text-transform: capitalize;">${space.type}</p>
+                        <h3 class="green-card-title" style="font-size: 1.5rem;">${space.name}</h3>
+                        <p style="margin: 0; color: #CBD5E1; font-size: 0.9rem;">${space.highlight[lang]}</p>
                     </div>
                 </div>
-                <p style="color: var(--text-slate-300); margin-bottom: 1rem;">${space.description[lang]}</p>
-                <div class="green-space-metrics" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
-                    <div class="green-space-metric" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border-radius: var(--radius-lg);">
-                        <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.25rem;">${lang === 'en' ? 'Area' : 'Oppervlakte'}</p>
-                        <p style="font-size: 1.1rem; font-weight: 600; color: var(--text-slate-200); margin: 0;">${space.area}</p>
-                    </div>
-                    <div class="green-space-metric" style="padding: 1rem; background: rgba(30, 41, 59, 0.5); border-radius: var(--radius-lg);">
-                        <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.25rem;">${lang === 'en' ? 'Trees' : 'Bomen'}</p>
-                        <p style="font-size: 1.1rem; font-weight: 600; color: var(--text-slate-200); margin: 0;">~${space.trees.toLocaleString()}</p>
-                    </div>
+
+                <p class="green-section-title">${en ? 'Getting there from Den Haag Centraal' : 'Erheen vanaf Den Haag Centraal'}</p>
+                <div class="green-metrics">
+                    ${travel ? metric(en ? 'Walk' : 'Lopen', `${travel.walk} min`, formatGreenDistance(travel.meters)) : ''}
+                    ${travel ? metric(en ? 'Bike' : 'Fiets', `${travel.bike} min`, '') : ''}
+                    ${stopUseful ? metric(en ? 'Nearest stop' : 'Dichtstbijzijnde halte', stop.stop.name[lang] || stop.stop.name.en, `${(stop.stop.lines || []).join(', ')} · ${formatGreenDistance(stop.distance)}`) : ''}
                 </div>
-                <div style="margin-top: 1rem;">
-                    <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.5rem;">${lang === 'en' ? 'Facilities' : 'Voorzieningen'}</p>
-                    <div class="facilities-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                        ${space.facilities[lang].map(facility => `
-                            <span style="padding: 0.25rem 0.75rem; background: rgba(34, 197, 94, 0.2); color: rgb(74, 222, 128); border-radius: 9999px; font-size: 0.75rem;">${facility}</span>
-                        `).join('')}
-                    </div>
+
+                <p class="green-section-title">${en ? 'Weather there now' : 'Weer daar nu'}</p>
+                ${weather ? `
+                <div class="green-metrics">
+                    ${metric(en ? 'Temperature' : 'Temperatuur', `${Math.round(weather.temp)}°C`, '')}
+                    ${metric(en ? 'Rain next 3 hours' : 'Regen komende 3 uur', weather.rainChance === null ? '—' : `${weather.rainChance}%`, '')}
+                    ${metric(en ? 'Wind' : 'Wind', `${Math.round(weather.wind)} km/h`, '')}
+                </div>
+                ${outlook ? `<p class="green-outlook ${outlook.good ? 'is-good' : 'is-bad'}">${outlook.text}</p>` : ''}` : `<p class="green-card-text">${greenWeather.status === 'error' ? (en ? 'Live weather is not available right now.' : 'Live weer is nu niet beschikbaar.') : (en ? 'Loading live weather…' : 'Live weer laden…')}</p>`}
+
+                <p class="green-section-title">${en ? 'What you can do' : 'Wat je er kunt doen'}</p>
+                <div class="facilities-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    ${space.facilities[lang].map(f => `<span class="green-chip">${f}</span>`).join('')}
                 </div>
             `;
-            
+
             return detailCard;
+        }
+
+        function renderGreenSummary() {
+            const box = document.getElementById('green-summary');
+            if (!box) return;
+            const lang = currentLanguage;
+            const en = lang === 'en';
+            const withTravel = greenSpaces.map(space => ({ space, travel: greenTravel(space) })).filter(x => x.travel);
+            const closest = withTravel.sort((a, b) => a.travel.meters - b.travel.meters)[0];
+            const parks = greenSpaces.filter(sp => sp.type === 'park').length;
+            const forests = greenSpaces.length - parks;
+            const anyWeather = Object.values(greenWeather.byId);
+            const rainMax = anyWeather.length ? Math.max(...anyWeather.map(w => w.rainChance ?? 0)) : null;
+            const card = (color, title, value, sub) => `
+                <div class="summary-card" style="border-color: ${color};">
+                    <h4 style="color: #E2E8F0; font-weight: 600;">${title}</h4>
+                    <p style="color: #F8FAFC; font-size: 1.6rem; font-weight: 700;">${value}</p>
+                    <p style="color: #CBD5E1; font-size: 0.875rem;">${sub}</p>
+                </div>`;
+            box.innerHTML = card('rgba(34, 197, 94, 0.5)', en ? 'Green spaces' : 'Groene plekken', greenSpaces.length, en ? `${parks} parks · ${forests} forests` : `${parks} parken · ${forests} bossen`)
+                + (closest ? card('rgba(16, 185, 129, 0.5)', en ? 'Closest to Centraal' : 'Dichtst bij Centraal', closest.space.name, en ? `${closest.travel.walk} min walk` : `${closest.travel.walk} min lopen`) : '')
+                + card('rgba(56, 189, 248, 0.5)', en ? 'Rain next 3 hours' : 'Regen komende 3 uur', rainMax === null ? '—' : `${rainMax}%`, rainMax === null ? (en ? 'Live data loading' : 'Live gegevens laden') : rainMax >= 60 ? (en ? 'Bring an umbrella' : 'Neem een paraplu mee') : (en ? 'Dry enough for a walk' : 'Droog genoeg om te wandelen'));
         }
 
         function selectGreenSpace(spaceId) {
@@ -2961,30 +3091,7 @@
         }
 
         function renderGreenSpaceDetails(space) {
-            const lang = currentLanguage;
-            const typeColor = space.type === 'forest' ? 'rgb(5, 150, 105)' : 'rgb(16, 185, 129)';
-            const typeBg = space.type === 'forest' ? 'rgba(5, 150, 105, 0.2)' : 'rgba(16, 185, 129, 0.2)';
-            
-            // Update header
-            document.getElementById('green-space-name').textContent = space.name;
-            document.getElementById('green-space-type').textContent = space.type;
-            document.getElementById('green-space-description').textContent = space.description[lang];
-            
-            // Update icon
-            const iconBox = document.getElementById('green-space-icon-box');
-            iconBox.style.background = typeBg;
-            const icon = document.getElementById('green-space-icon');
-            icon.style.color = typeColor;
-            
-            // Update metrics
-            document.getElementById('green-space-area').textContent = space.area;
-            document.getElementById('green-space-trees').textContent = '~' + space.trees.toLocaleString();
-            
-            // Update facilities
-            const facilitiesContainer = document.getElementById('green-space-facilities');
-            facilitiesContainer.innerHTML = space.facilities[lang].map(facility => `
-                <span style="padding: 0.25rem 0.75rem; background: rgba(34, 197, 94, 0.2); color: rgb(74, 222, 128); border-radius: 9999px; font-size: 0.75rem;">${facility}</span>
-            `).join('');
+            // Details are shown inline (createInlineGreenSpaceDetailCard)
         }
 
         // Heat Zones Data
@@ -3534,20 +3641,17 @@
                 onMapLoad: (map) => {
                     // Add green space markers
                     greenSpaces.forEach(space => {
-                        const color = space.type === 'park' ? '#10B981' : '#059669';
-                        const marker = mapInstances['green'].addMarker({
-                            position: getMapLocation('green', space.id) || DEN_HAAG_CENTER,
-                            icon: {
-                                path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
-                                fillColor: color,
-                                fillOpacity: 1,
-                                strokeColor: '#FFFFFF',
-                                strokeWeight: 2,
-                                scale: 2
-                            },
-                            title: typeof space.name === 'string' ? space.name : space.name[currentLanguage]
+                        const loc = getMapLocation('green', space.id) || DEN_HAAG_CENTER;
+                        const icon = L.divIcon({
+                            className: 'green-marker',
+                            html: `<div class="green-marker-pin ${space.type === 'forest' ? 'is-forest' : 'is-park'}">${greenTypeIcon(space.type, 26)}</div>`,
+                            iconSize: [42, 50],
+                            iconAnchor: [21, 48]
                         });
-                        
+                        const marker = L.marker([loc.lat, loc.lng], { icon, title: space.name, riseOnHover: true }).addTo(map);
+                        marker.bindTooltip(space.name, { direction: 'top', offset: [0, -46] });
+                        marker.addListener = function(eventName, fn) { this.on(eventName, fn); return this; };
+                        mapInstances['green'].markers.push(marker);
                         registerMapShape('green', space.id, marker);
                         if (marker) {
                             marker.addListener('click', () => {
@@ -3565,12 +3669,12 @@
                         <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.5rem; font-weight: 500;">Green Spaces</p>
                         <div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.75rem; color: var(--text-slate-300);">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div style="width: 0.75rem; height: 0.75rem; background: rgb(16, 185, 129); border-radius: 2px;"></div>
-                                <span>Park</span>
+                                ${greenTypeIcon('park', 18)}
+                                <span>${greenTypeLabel('park', currentLanguage)}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div style="width: 0.75rem; height: 0.75rem; background: rgb(5, 150, 105); border-radius: 2px;"></div>
-                                <span>Forest</span>
+                                ${greenTypeIcon('forest', 18)}
+                                <span>${greenTypeLabel('forest', currentLanguage)}</span>
                             </div>
                         </div>
                     </div>
@@ -3977,8 +4081,6 @@
         document.addEventListener('DOMContentLoaded', function() {
             if (document.querySelector('.green-spaces-grid')) {
                 renderGreenSpaces();
-                const totalTrees = greenSpaces.reduce((sum, s) => sum + s.trees, 0);
-                document.getElementById('total-trees').textContent = '~' + totalTrees.toLocaleString();
             }
             
             if (document.querySelector('.heat-zones-grid')) {
