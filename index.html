@@ -664,24 +664,6 @@
                                 <!-- Stops will be dynamically rendered here -->
                             </div>
 
-                            <!-- Summary Cards -->
-                            <div class="transport-summary-cards">
-                                <div class="summary-card" style="border-color: rgba(59, 130, 246, 0.5);">
-                                    <h4 id="transport-total-stops-label" style="color: rgb(96, 165, 250); font-weight: 600;">Total Stops</h4>
-                                    <p id="transport-total-stops" style="color: var(--text-slate-300); font-size: 2rem; font-weight: 700;">6</p>
-                                    <p id="transport-active-label" style="color: var(--text-slate-500); font-size: 0.875rem;">Active</p>
-                                </div>
-                                <div class="summary-card" style="border-color: rgba(234, 179, 8, 0.5);">
-                                    <h4 id="transport-train-stations-label" style="color: rgb(234, 179, 8); font-weight: 600;">Train Stations</h4>
-                                    <p id="transport-train-stations" style="color: var(--text-slate-300); font-size: 2rem; font-weight: 700;">2</p>
-                                    <p style="color: var(--text-slate-500); font-size: 0.875rem;">Den Haag</p>
-                                </div>
-                                <div class="summary-card" style="border-color: rgba(139, 92, 246, 0.5);">
-                                    <h4 id="transport-routes-label" style="color: rgb(167, 139, 250); font-weight: 600;">Routes</h4>
-                                    <p id="transport-routes" style="color: var(--text-slate-300); font-size: 2rem; font-weight: 700;">3</p>
-                                    <p id="transport-lines-summary-label" style="color: var(--text-slate-500); font-size: 0.875rem;">Lines</p>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -3196,24 +3178,13 @@
 
         // Make helper functions globally accessible for transport-planner.js
         window.getTransportTypeIcon = function getTransportTypeIcon(type) {
-            switch (type) {
-                case 'train':
-                    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 2rem; height: 2rem; color: rgb(234, 179, 8);">
-                        <rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 8h16M8 4v4M16 4v4M4 12h16M4 16h16"/>
-                    </svg>`;
-                case 'tram':
-                    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 2rem; height: 2rem; color: rgb(59, 130, 246);">
-                        <rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="16" cy="12" r="3"/>
-                    </svg>`;
-                case 'bus':
-                    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 2rem; height: 2rem; color: rgb(139, 92, 246);">
-                        <rect x="4" y="6" width="16" height="12" rx="2"/><path d="M4 10h16M8 6v4M16 6v4M6 18h2M16 18h2"/>
-                    </svg>`;
-                default:
-                    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 2rem; height: 2rem; color: rgb(139, 92, 246);">
-                        <rect x="4" y="6" width="16" height="12" rx="2"/>
-                    </svg>`;
-            }
+            const icons = {
+                train: { color: 'rgb(234, 179, 8)', body: '<path d="M8 3.1V7a4 4 0 0 0 8 0V3.1"/><path d="m9 15-1-1"/><path d="m15 15 1-1"/><path d="M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z"/><path d="m8 19-2 3"/><path d="m16 19 2 3"/>' },
+                tram: { color: 'rgb(59, 130, 246)', body: '<rect width="16" height="16" x="4" y="3" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><path d="m8 19-2 3"/><path d="m18 22-2-3"/><path d="M8 15h.01"/><path d="M16 15h.01"/>' },
+                bus: { color: 'rgb(139, 92, 246)', body: '<path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/>' }
+            };
+            const icon = icons[type] || icons.bus;
+            return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 2rem; height: 2rem; color: ${icon.color};">${icon.body}</svg>`;
         }
 
         window.getTransportTypeColor = function getTransportTypeColor(type) {
@@ -3608,9 +3579,7 @@
                 
                 card.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: ${colors.color}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            <div style="width: 1.5rem; height: 1.5rem; border-radius: 50%; background: white;"></div>
-                        </div>
+                        <div style="padding: 0.5rem; background: ${colors.color.replace('rgb', 'rgba').replace(')', ', 0.2)')}; border-radius: 0.5rem; display: flex; flex-shrink: 0;">${getTransportTypeIcon(stop.type)}</div>
                         <div style="flex: 1;">
                             <h4 style="color: var(--text-slate-200); font-size: 1rem; font-weight: 600; margin: 0 0 0.25rem 0;">${stop.name[lang]}</h4>
                             <p style="color: var(--text-slate-400); font-size: 0.875rem; margin: 0; text-transform: capitalize;">${stop.type}</p>
