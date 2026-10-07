@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Den Haag in 3D</title>
-    <link rel="stylesheet" href="css/style.css?v=5">
+    <link rel="stylesheet" href="css/style.css?v=6">
     <!-- Free map: Leaflet + OpenStreetMap (no API key needed) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -37,7 +37,7 @@
                 <!-- Left Sidebar -->
                 <aside class="sidebar" style="width: 16rem; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(4px); border-right: 1px solid rgba(16, 185, 129, 0.3); display: flex; flex-direction: column;">
                     <!-- Header -->
-                    <div style="padding: 1.5rem; border-bottom: 1px solid rgba(16, 185, 129, 0.3);">
+                    <div class="top-header" style="border-bottom: 1px solid rgba(16, 185, 129, 0.3);">
                         <h2 class="sidebar-title" onclick="goHome()" style="color: rgb(52, 211, 153); letter-spacing: 0.05em; cursor: pointer; font-size: 1.5rem; font-weight: 600; margin: 0; transition: color 0.2s;" onmouseover="this.style.color='rgb(110, 231, 183)'" onmouseout="this.style.color='rgb(52, 211, 153)'">Den Haag in 3D</h2>
                     </div>
                     <!-- Menu Items -->
@@ -73,7 +73,7 @@
                 <!-- Design Concept Panel -->
                 <div id="design-panel" class="panel design-panel hidden">
                     <!-- Header -->
-                    <div class="panel-header" style="padding: 1.5rem; border-bottom: 1px solid rgba(16, 185, 129, 0.3);">
+                    <div class="panel-header top-header" style="border-bottom: 1px solid rgba(16, 185, 129, 0.3);">
                         <h3 style="color: rgb(52, 211, 153); font-size: 1.3rem; font-weight: 600; margin: 0;" data-i18n="design-concept">Design Concept</h3>
                     </div>
                     <!-- Content -->
@@ -167,7 +167,7 @@
                 <!-- Layers Panel -->
                 <div id="layers-panel" class="panel layers-panel hidden">
                     <!-- Header -->
-                    <div class="panel-header" style="padding: 1.5rem; border-bottom: 1px solid rgba(16, 185, 129, 0.3);">
+                    <div class="panel-header top-header" style="border-bottom: 1px solid rgba(16, 185, 129, 0.3);">
                         <h3 style="color: rgb(52, 211, 153); font-size: 1.3rem; font-weight: 600; margin: 0 0 0.5rem 0;">City Data Layers</h3>
                         <p style="color: #90A1B9; font-size: 0.875rem; margin: 0;" data-i18n="toggle-layers-subtitle">Toggle layers to visualize city data</p>
                     </div>
@@ -295,7 +295,7 @@
                 <!-- Settings Panel -->
                 <div id="settings-panel" class="panel settings-panel hidden" style="width: 450px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(4px); border-right: 1px solid rgba(16, 185, 129, 0.3); display: flex; flex-direction: column; overflow-y: auto;">
                     <!-- Header -->
-                    <div style="padding: 1.5rem; border-bottom: 1px solid rgba(16, 185, 129, 0.3);">
+                    <div class="top-header" style="border-bottom: 1px solid rgba(16, 185, 129, 0.3);">
                         <h3 style="color: rgb(52, 211, 153); font-size: 1.3rem; font-weight: 600; margin: 0;">Settings</h3>
                     </div>
                     <!-- Content -->
@@ -587,29 +587,6 @@
                                 </div>
                             </div>
 
-                            <!-- Destination Search Bar -->
-                            <div class="transport-search-container" style="margin-bottom: 1rem;">
-                                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); width: 1.25rem; height: 1.25rem; color: var(--text-slate-400); z-index: 1;">
-                                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                                </svg>
-                                <input type="text" id="transport-destination-search" class="transport-search-input" placeholder="Enter destination (address or place name)..." style="padding-left: 3rem; padding-right: 5rem;">
-                                <button id="transport-plan-route-btn" onclick="handleRoutePlanning()" style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); padding: 0.5rem 1rem; background: rgb(5, 150, 105); color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.background='rgb(4, 120, 87)'" onmouseout="this.style.background='rgb(5, 150, 105)'">Plan Route</button>
-                            </div>
-
-                            <!-- Nearby Stops Section -->
-                            <div style="margin-bottom: 1.5rem;">
-                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
-                                    <h4 style="margin: 0; color: rgb(96, 165, 250); font-size: 1rem; font-weight: 600;">Nearby Stops</h4>
-                                    <span id="nearby-stops-count" style="color: #90A1B9; font-size: 0.875rem;">Detecting location...</span>
-                                </div>
-                                <div id="nearby-stops-list" style="max-height: 300px; overflow-y: auto; padding-right: 0.5rem;">
-                                    <p style="color: var(--text-slate-400); text-align: center; padding: 1rem;">Detecting your location...</p>
-                                </div>
-                            </div>
-
-                            <!-- Route Plan Display -->
-                            <div id="route-plan-display" style="display: none;"></div>
-
                             <!-- Transport Line Colors Legend -->
                             <div style="margin-bottom: 1rem; padding: 1rem; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 0.75rem;">
                                 <h4 style="margin: 0 0 0.5rem 0; color: rgb(96, 165, 250); font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Transport Legend (3D Projection Map)</h4>
@@ -634,23 +611,28 @@
                                 </div>
                             </div>
 
-                            <!-- Transport Map -->
-                            <!-- 
-                                This map displays:
-                                1. Google Maps TransitLayer (tram/bus/metro lines & stops)
-                                2. Google Maps TrafficLayer (live road congestion)
-                                3. Real-time HTM vehicle positions (updated every 12 seconds)
-                                
-                                Configuration:
-                                - Google Maps API key: Update in <head> script tag
-                                - Real-time API URL: Update HTM_REALTIME_API_URL in transport.js
-                            -->
-                            <div class="transport-map-container">
-                                <div id="transport-map-container" class="map-placeholder" style="height: 500px; border: 2px solid rgba(59, 130, 246, 0.5); border-radius: 1rem; background: rgba(15, 23, 42, 0.95); position: relative; overflow: hidden;">
-                                    <!-- Map will be initialized here with TransitLayer, TrafficLayer, and real-time vehicle markers -->
-                                    <!-- Overlay content (legend, instructions) will be added to overlay container -->
+                            <!-- Destination Search Bar -->
+                            <div class="transport-search-container" style="margin-bottom: 1rem;">
+                                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); width: 1.25rem; height: 1.25rem; color: var(--text-slate-400); z-index: 1;">
+                                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                                </svg>
+                                <input type="text" id="transport-destination-search" class="transport-search-input" placeholder="Enter destination (address or place name)..." style="padding-left: 3rem; padding-right: 5rem;">
+                                <button id="transport-plan-route-btn" onclick="handleRoutePlanning()" style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); padding: 0.5rem 1rem; background: rgb(5, 150, 105); color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.background='rgb(4, 120, 87)'" onmouseout="this.style.background='rgb(5, 150, 105)'">Plan Route</button>
+                            </div>
+
+                            <!-- Nearby Stops Section -->
+                            <div style="margin-bottom: 1.5rem;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                                    <h4 style="margin: 0; color: rgb(96, 165, 250); font-size: 1rem; font-weight: 600;">Nearby Stops</h4>
+                                    <span id="nearby-stops-count" style="color: #90A1B9; font-size: 0.875rem;">Detecting location...</span>
+                                </div>
+                                <div id="nearby-stops-list" style="max-height: 300px; overflow-y: auto; padding-right: 0.5rem;">
+                                    <p style="color: var(--text-slate-400); text-align: center; padding: 1rem;">Detecting your location...</p>
                                 </div>
                             </div>
+
+                            <!-- Route Plan Display -->
+                            <div id="route-plan-display" style="display: none;"></div>
 
                             <!-- Selected Stop Details -->
                             <div id="transport-stop-details" class="transport-stop-details hidden">
@@ -3363,115 +3345,13 @@
         }
 
         function initTransportMap() {
-            mapShapes['transport'] = {};
-            // Cleanup existing real-time updates if any
+            // The transport layer has no map: it shows the legend, nearby stops and route search
             if (window.TransportRealtime) {
                 window.TransportRealtime.cleanup();
             }
-
-            // Cleanup existing planner if any
             if (window.TransportPlanner) {
                 window.TransportPlanner.cleanup();
-            }
-
-            // Destroy existing map if any
-            if (mapInstances['transport']) {
-                mapInstances['transport'].destroy();
-            }
-
-            // Initialize new map with dark theme
-            mapInstances['transport'] = new GoogleMapBase('transport-map-container', {
-                center: { lat: 52.0705, lng: 4.3007 }, // The Hague center (will be updated to user location)
-                zoom: 12,
-                showControls: true,
-                borderColor: 'rgba(59, 130, 246, 0.5)',
-                onMapLoad: (map) => {
-                    // Initialize Google Maps TransitLayer and TrafficLayer
-                    // This will show tram/bus/metro lines & stops, plus live traffic
-                    if (window.TransportRealtime) {
-                        window.TransportRealtime.init(map);
-                    } else {
-                        console.warn('TransportRealtime module not loaded. Make sure transport.js is included.');
-                    }
-
-                    // Initialize Transport Planner (nearby stops & route planning)
-                    // Wait a bit to ensure transport-planner.js has loaded and Google Maps is ready
-                    if (window.TransportPlanner && typeof window.TransportPlanner.init === 'function') {
-                        // Initialize asynchronously to ensure Google Maps is fully ready
-                        setTimeout(() => {
-                            window.TransportPlanner.init(map);
-                        }, 100);
-                    } else {
-                        console.warn('[Transport Layer] TransportPlanner module not loaded. Make sure transport-planner.js is included.');
-                        console.warn('[Transport Layer] Retrying initialization in 1 second...');
-                        // Retry after a delay in case script is still loading
-                        setTimeout(() => {
-                            if (window.TransportPlanner && typeof window.TransportPlanner.init === 'function') {
-                                window.TransportPlanner.init(map);
-                            } else {
-                                console.error('[Transport Layer] TransportPlanner failed to load after retry. Check:');
-                                console.error('  1. js/transport-planner.js file exists');
-                                console.error('  2. Script tag in index.html is correct');
-                                console.error('  3. No JavaScript errors preventing script execution');
-                                console.error('  4. Google Maps API loaded with directions library');
-                            }
-                        }, 1000);
-                    }
-
-                    // Add transport stop markers (static stops) - these are now supplemented by nearby stops
-                    window.transportStops.forEach(stop => {
-                        const colors = getTransportTypeColor(stop.type);
-                        const marker = mapInstances['transport'].addMarker({
-                            position: stop.position,
-                            icon: {
-                                path: 'circle',
-                                fillColor: colors.color,
-                                fillOpacity: 1,
-                                strokeColor: '#FFFFFF',
-                                strokeWeight: 2,
-                                scale: 10
-                            },
-                            title: stop.name[currentLanguage]
-                        });
-                        
-                        registerMapShape('transport', stop.id, marker);
-                        // Add click listener to select stop
-                        if (marker) {
-                            marker.addListener('click', () => {
-                                selectTransportStop(stop.id);
-                            });
-                        }
-                    });
-                }
-            });
-
-            // Add overlay content (legend and instructions)
-            const overlay = mapInstances['transport'].getOverlayContainer();
-            if (overlay) {
-                overlay.innerHTML = `
-                    <!-- Legend -->
-                    <div class="map-legend" style="position: absolute; top: 1rem; left: 1rem; z-index: 20; padding: 0.75rem; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(59, 130, 246, 0.5); border-radius: 0.5rem; backdrop-filter: blur(4px); pointer-events: none;">
-                        <p id="transport-legend-title" style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.5rem; font-weight: 500;">Transport Types</p>
-                        <div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.75rem; color: var(--text-slate-300);">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div style="width: 0.75rem; height: 0.75rem; background: rgb(234, 179, 8); border-radius: 50%;"></div>
-                                <span id="transport-legend-train">Train</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div style="width: 0.75rem; height: 0.75rem; background: rgb(59, 130, 246); border-radius: 50%;"></div>
-                                <span id="transport-legend-tram">Tram</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div style="width: 0.75rem; height: 0.75rem; background: rgb(139, 92, 246); border-radius: 50%;"></div>
-                                <span>Bus</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Instruction -->
-                    <div style="position: absolute; top: 1rem; right: 1rem; z-index: 20; padding: 0.75rem; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(59, 130, 246, 0.5); border-radius: 0.5rem; backdrop-filter: blur(4px); pointer-events: none;">
-                        <p id="transport-instruction" style="font-size: 0.875rem; color: var(--text-slate-300);">Click a stop for details</p>
-                    </div>
-                `;
+                window.TransportPlanner.init(null);
             }
         }
 

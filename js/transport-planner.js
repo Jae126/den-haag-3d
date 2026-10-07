@@ -37,8 +37,7 @@ function formatDistance(m) {
 }
 
 function initTransportPlanner(map) {
-    if (!map || typeof L === 'undefined') return;
-    plannerMap = map;
+    plannerMap = map && typeof L !== 'undefined' ? map : null;
     getUserLocation();
 }
 

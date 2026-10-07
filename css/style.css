@@ -1881,3 +1881,15 @@ body {
 .map-tiles-dark {
   filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9) saturate(0.5);
 }
+
+/* Every top header (sidebar title and the panel next to it) has the same height,
+   so their bottom lines always line up */
+.top-header {
+  height: 6.5rem;
+  box-sizing: border-box;
+  padding: 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-shrink: 0;
+}
