@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Den Haag in 3D</title>
-    <link rel="stylesheet" href="css/style.css?v=9">
+    <link rel="stylesheet" href="css/style.css?v=10">
     <!-- Free map: Leaflet + OpenStreetMap (no API key needed) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -1126,20 +1126,22 @@
             // Free basemaps, no API key. If one provider refuses or fails to load,
             // the map switches to the next one automatically.
             addBasemap(index) {
-                const providers = [
-                    {
-                        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-                        labels: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
-                        attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors',
-                        maxZoom: 16
-                    },
-                    {
-                        url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
-                        maxZoom: 19,
-                        className: 'map-tiles-dark'
-                    }
-                ];
+                // Inside the claude.ai preview or a local file, OpenStreetMap refuses tiles
+                // ("Access blocked"), so start with Esri there. On the real website start with OpenStreetMap.
+                const canUseOsm = /^https?:$/.test(location.protocol) && window.origin !== 'null' && window.top === window;
+                const osm = {
+                    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
+                    maxZoom: 19,
+                    className: 'map-tiles-dark'
+                };
+                const esri = {
+                    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+                    attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors',
+                    maxZoom: 19,
+                    className: 'map-tiles-dark'
+                };
+                const providers = canUseOsm ? [osm, esri] : [esri, osm];
                 const provider = providers[index];
                 if (!provider || !this.map) return;
                 (this.basemapLayers || []).forEach(layer => this.map.removeLayer(layer));
@@ -3017,7 +3019,7 @@
                 + '?latitude=' + zones.map(z => z.loc.lat).join(',')
                 + '&longitude=' + zones.map(z => z.loc.lng).join(',')
                 + '&current=temperature_2m,apparent_temperature,relative_humidity_2m'
-                + '&daily=temperature_2m_max&forecast_days=1&timezone=Europe%2FAmsterdam';
+                + '&hourly=temperature_2m&daily=temperature_2m_max,uv_index_max&forecast_days=2&timezone=Europe%2FAmsterdam';
             try {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('HTTP ' + response.status);
@@ -3031,6 +3033,8 @@
                         feels: d.current.apparent_temperature,
                         humidity: d.current.relative_humidity_2m,
                         max: d.daily && d.daily.temperature_2m_max ? d.daily.temperature_2m_max[0] : null,
+                        uv: d.daily && d.daily.uv_index_max ? d.daily.uv_index_max[0] : null,
+                        hourly: d.hourly ? d.hourly.time.map((t, n) => ({ time: t, temp: d.hourly.temperature_2m[n] })) : [],
                         time: d.current.time
                     };
                 });
@@ -3045,6 +3049,7 @@
                 console.warn('[Heat] Live weather unavailable:', error);
                 heatWeather.status = 'error';
             }
+            recolorHeatMap();
             if (!document.getElementById('heat-detail').classList.contains('hidden')) {
                 renderHeatZones();
             }
@@ -3064,6 +3069,37 @@
         }
 
         // Nearest green space (from the Green Spaces layer) to a heat zone
+        // Colour by the live air temperature, using KNMI terms:
+        // 25 °C or more = summer day (zomerse dag), 30 °C or more = tropical day (tropische dag)
+        const HEAT_CATEGORIES = [
+            { min: 30, key: 'tropical', color: 'rgb(239, 68, 68)', rgb: '239, 68, 68', label: { en: 'Tropical day (30°C+)', nl: 'Tropische dag (30°C+)' }, short: { en: 'Tropical', nl: 'Tropisch' } },
+            { min: 25, key: 'summer', color: 'rgb(249, 115, 22)', rgb: '249, 115, 22', label: { en: 'Summer day (25–30°C)', nl: 'Zomerse dag (25–30°C)' }, short: { en: 'Summer day', nl: 'Zomerse dag' } },
+            { min: 20, key: 'warm', color: 'rgb(250, 204, 21)', rgb: '250, 204, 21', label: { en: 'Warm (20–25°C)', nl: 'Warm (20–25°C)' }, short: { en: 'Warm', nl: 'Warm' } },
+            { min: -99, key: 'mild', color: 'rgb(45, 212, 191)', rgb: '45, 212, 191', label: { en: 'Mild (below 20°C)', nl: 'Mild (onder 20°C)' }, short: { en: 'Mild', nl: 'Mild' } }
+        ];
+        const NO_DATA_CATEGORY = { key: 'none', color: 'rgb(148, 163, 184)', rgb: '148, 163, 184', label: { en: 'No live data', nl: 'Geen live gegevens' }, short: { en: 'No live data', nl: 'Geen live gegevens' } };
+
+        function heatCategory(temp) {
+            if (temp === null || temp === undefined) return NO_DATA_CATEGORY;
+            return HEAT_CATEGORIES.find(c => temp >= c.min);
+        }
+
+        function zoneHeat(zone) {
+            const live = heatWeather.byZone[zone.id];
+            return heatCategory(live ? live.temp : null);
+        }
+
+        // Re-colour the circles on the map once live temperatures arrive
+        function recolorHeatMap() {
+            const shapes = mapShapes['heat'] || {};
+            heatZones.forEach(zone => {
+                const entry = shapes[zone.id];
+                if (!entry) return;
+                const cat = zoneHeat(zone);
+                entry.shape.setStyle({ color: cat.color, fillColor: cat.color });
+            });
+        }
+
         function nearestCoolSpot(zone) {
             const from = MAP_LOCATIONS.heat[zone.id];
             if (!from || typeof greenSpaces === 'undefined') return null;
@@ -3452,12 +3488,11 @@
                 onMapLoad: (map) => {
                     // Add heat zone polygons
                     heatZones.forEach(zone => {
-                        const color = getHeatZoneColor(zone.intensity);
-                        const borderColor = getHeatZoneBorderColor(zone.intensity);
+                        const cat = zoneHeat(zone);
                         const polygon = addZoneShape('heat', zone.id, {
-                            fillColor: color,
+                            fillColor: cat.color,
                             fillOpacity: 0.3,
-                            strokeColor: borderColor,
+                            strokeColor: cat.color,
                             strokeOpacity: 1,
                             strokeWeight: 2,
                             clickable: true
@@ -3476,24 +3511,10 @@
             if (overlay) {
                 overlay.innerHTML = `
                     <div class="map-legend" style="position: absolute; top: 1rem; left: 1rem; z-index: 20; padding: 0.75rem; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 0.5rem; backdrop-filter: blur(4px); pointer-events: none;">
-                        <p id="heat-legend-title" style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.5rem; font-weight: 500;">Heat island effect</p>
-                        <div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.75rem; color: var(--text-slate-300);">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div style="width: 0.75rem; height: 0.75rem; background: rgb(239, 68, 68); border-radius: 2px;"></div>
-                                <span id="heat-legend-high">Strong heat island</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div style="width: 0.75rem; height: 0.75rem; background: rgb(249, 115, 22); border-radius: 2px;"></div>
-                                <span id="heat-legend-medium">Moderate heat island</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div style="width: 0.75rem; height: 0.75rem; background: rgb(45, 212, 191); border-radius: 2px;"></div>
-                                <span id="heat-legend-low">Cool area</span>
-                            </div>
+                        <p id="heat-legend-title" style="font-size: 0.75rem; color: #CBD5E1; margin-bottom: 0.5rem; font-weight: 600;">${currentLanguage === 'en' ? 'Temperature now' : 'Temperatuur nu'}</p>
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.75rem; color: #E2E8F0;">
+                            ${HEAT_CATEGORIES.map(c => `<div style="display: flex; align-items: center; gap: 0.5rem;"><div style="width: 0.75rem; height: 0.75rem; background: ${c.color}; border-radius: 2px;"></div><span>${c.label[currentLanguage] || c.label.en}</span></div>`).join('')}
                         </div>
-                    </div>
-                    <div style="position: absolute; top: 1rem; right: 1rem; z-index: 20; padding: 0.75rem; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 0.5rem; backdrop-filter: blur(4px); pointer-events: none;">
-                        <p id="heat-instruction" style="font-size: 0.875rem; color: var(--text-slate-300);">Click a zone for details</p>
                     </div>
                 `;
             }
@@ -3553,9 +3574,6 @@
                             </div>
                         </div>
                     </div>
-                    <div style="position: absolute; top: 1rem; right: 1rem; z-index: 20; padding: 0.75rem; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(34, 197, 94, 0.5); border-radius: 0.5rem; backdrop-filter: blur(4px); pointer-events: none;">
-                        <p style="font-size: 0.875rem; color: var(--text-slate-300);">Click a marker for details</p>
-                    </div>
                 `;
             }
         }
@@ -3600,9 +3618,6 @@
                         <div id="choropleth-legend" class="choropleth-legend" style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.75rem; color: var(--text-slate-300);">
                             <!-- Legend will be dynamically updated -->
                         </div>
-                    </div>
-                    <div style="position: absolute; top: 1rem; left: 1rem; z-index: 20; padding: 0.75rem; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(139, 92, 246, 0.5); border-radius: 0.5rem; backdrop-filter: blur(4px); pointer-events: none;">
-                        <p style="font-size: 0.875rem; color: var(--text-slate-300);">Click an area for details</p>
                     </div>
                 `;
             }
@@ -3662,9 +3677,6 @@
                                 <span id="noise-legend-high">High (65+ dB)</span>
                             </div>
                         </div>
-                    </div>
-                    <div style="position: absolute; top: 1rem; right: 1rem; z-index: 20; padding: 0.75rem; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(139, 92, 246, 0.5); border-radius: 0.5rem; backdrop-filter: blur(4px); pointer-events: none;">
-                        <p id="noise-instruction" style="font-size: 0.875rem; color: var(--text-slate-300);">Click a zone for details</p>
                     </div>
                 `;
             }
@@ -3800,17 +3812,15 @@
                 if (isSelected) {
                     selectedCardIndex = index;
                 }
-                const zoneColor = getHeatZoneColor(zone.intensity);
-                const borderColor = getHeatZoneBorderColor(zone.intensity);
-                const bgColor = zone.intensity === 'high' ? 'rgba(239, 68, 68, 0.2)' : 
-                               zone.intensity === 'medium' ? 'rgba(249, 115, 22, 0.2)' : 
-                               'rgba(45, 212, 191, 0.18)';
+                const cat = zoneHeat(zone);
+                const zoneColor = cat.color;
+                const bgColor = `rgba(${cat.rgb}, 0.18)`;
                 
                 const card = document.createElement('div');
                 card.className = 'heat-zone-card';
                 card.setAttribute('data-zone-id', zone.id);
                 if (isSelected) card.classList.add('selected');
-                card.style.borderColor = isSelected ? zoneColor : `rgba(${zone.intensity === 'high' ? '239, 68, 68' : zone.intensity === 'medium' ? '249, 115, 22' : '45, 212, 191'}, 0.5)`;
+                card.style.borderColor = isSelected ? zoneColor : `rgba(${cat.rgb}, 0.5)`;
                 card.onclick = () => { selectHeatZone(zone.id); focusMapOn('heat', selectedHeatZone); };
                 
                 const live = heatWeather.byZone[zone.id];
@@ -3826,7 +3836,7 @@
                         </div>
                         <div style="flex: 1; min-width: 0;">
                             <h3 style="color: ${zoneColor}; font-size: 1.2rem; font-weight: 600; margin: 0 0 0.4rem 0;">${zone.area[lang]}</h3>
-                            <span class="heat-level-pill" style="background: ${bgColor}; color: ${zoneColor};">${heatLevelLabel(zone.intensity, lang)}</span>
+                            <span class="heat-level-pill" style="background: ${bgColor}; color: ${zoneColor};">${cat.short[lang] || cat.short.en}</span>
                             <div class="heat-card-live">${liveText}</div>
                         </div>
                     </div>
@@ -3860,33 +3870,38 @@
         
         function createInlineHeatZoneDetailCard(zone) {
             const lang = currentLanguage;
-            const zoneColor = getHeatZoneColor(zone.intensity);
-            
+            const cat = zoneHeat(zone);
+            const zoneColor = cat.color;
+            const en = lang === 'en';
+            const live = heatWeather.byZone[zone.id];
+
             const detailCard = document.createElement('div');
             detailCard.className = 'heat-zone-detail-card heat-zone-detail-card-inline';
             detailCard.style.cssText = `grid-column: 1 / -1; padding: 1.5rem; background: rgba(15, 23, 42, 0.97); border: 2px solid ${zoneColor}; border-radius: var(--radius-lg); margin-top: 0.25rem;`;
-            
-            const en = lang === 'en';
-            const live = heatWeather.byZone[zone.id];
-            const cool = nearestCoolSpot(zone);
-            const hotToday = live && live.max !== null && live.max >= HEAT_WARNING_TEMP;
+
             const metric = (label, value, sub) => `
                 <div class="heat-detail-metric">
                     <p class="heat-detail-metric-label">${label}</p>
                     <p class="heat-detail-metric-value">${value}</p>
                     ${sub ? `<p class="heat-detail-metric-sub">${sub}</p>` : ''}
                 </div>`;
-            const coolDistance = cool ? (cool.distance < 1000 ? Math.round(cool.distance / 50) * 50 + ' m' : (cool.distance / 1000).toFixed(1) + ' km') : '';
-            const coolText = zone.intensity === 'low'
-                ? (en ? 'This area is itself one of the cooler places in the city.' : 'Dit gebied is zelf een van de koelere plekken in de stad.')
-                : cool
-                    ? (en ? `Nearest green area: <strong>${cool.name}</strong>, about ${coolDistance} away.` : `Dichtstbijzijnde groen: <strong>${cool.name}</strong>, ongeveer ${coolDistance} verderop.`)
-                    : '';
-            const adviceText = !live
-                ? (en ? 'Live weather is not available right now.' : 'Live weergegevens zijn nu niet beschikbaar.')
-                : hotToday
-                    ? (en ? `Today can reach ${formatTemp(live.max)}. Drink water, stay in the shade between 12:00 and 16:00 and check on older neighbours.` : `Vandaag kan het ${formatTemp(live.max)} worden. Drink water, blijf tussen 12:00 en 16:00 in de schaduw en let op oudere buren.`)
-                    : (en ? `No heat warning today. Warnings start around ${HEAT_WARNING_TEMP}°C.` : `Vandaag geen hittewaarschuwing. Waarschuwingen beginnen rond ${HEAT_WARNING_TEMP}°C.`);
+            const uvLabel = (uv) => uv === null || uv === undefined ? '' : uv < 3 ? (en ? 'Low' : 'Laag') : uv < 6 ? (en ? 'Moderate' : 'Matig') : uv < 8 ? (en ? 'High' : 'Hoog') : (en ? 'Very high' : 'Zeer hoog');
+
+            // Next hours: every 2 hours from now, 6 steps
+            let hoursHtml = '';
+            if (live && live.hourly.length) {
+                const nowHour = live.time.slice(0, 13);
+                const start = Math.max(0, live.hourly.findIndex(h => h.time.slice(0, 13) === nowHour));
+                const steps = [0, 2, 4, 6, 8, 10].map(n => live.hourly[start + n]).filter(Boolean);
+                hoursHtml = `
+                    <p class="heat-detail-info-title" style="margin-top: 1.1rem;">${en ? 'Next hours' : 'Komende uren'}</p>
+                    <div class="heat-hours">
+                        ${steps.map((h, n) => {
+                            const c = heatCategory(h.temp);
+                            return `<div class="heat-hour"><span class="heat-hour-time">${n === 0 ? (en ? 'Now' : 'Nu') : h.time.slice(11, 16)}</span><span class="heat-hour-temp" style="color: ${c.color};">${formatTemp(h.temp)}</span></div>`;
+                        }).join('')}
+                    </div>`;
+            }
 
             detailCard.innerHTML = `
                 <div class="heat-zone-detail-header" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
@@ -3895,32 +3910,21 @@
                     </svg>
                     <div>
                         <h3 style="color: ${zoneColor}; font-size: 1.5rem; font-weight: 700; margin: 0 0 0.25rem 0;">${zone.area[lang]}</h3>
-                        <p style="color: #CBD5E1; font-size: 0.9rem; margin: 0;">${heatLevelLabel(zone.intensity, lang)}</p>
+                        <p style="color: #CBD5E1; font-size: 0.9rem; margin: 0;">${cat.label[lang] || cat.label.en}</p>
                     </div>
                 </div>
+                ${live ? `
                 <div class="heat-zone-detail-metrics">
-                    ${metric(en ? 'Now' : 'Nu', live ? formatTemp(live.temp) : '—', live ? `${en ? 'Feels like' : 'Voelt als'} ${formatTemp(live.feels)}` : '')}
-                    ${metric(en ? "Today's high" : 'Maximum vandaag', live ? formatTemp(live.max) : '—', '')}
-                    ${metric(en ? 'Humidity' : 'Luchtvochtigheid', live ? `${Math.round(live.humidity)}%` : '—', '')}
+                    ${metric(en ? 'Now' : 'Nu', formatTemp(live.temp), '')}
+                    ${metric(en ? 'Feels like' : 'Voelt als', formatTemp(live.feels), '')}
+                    ${metric(en ? "Today's high" : 'Maximum vandaag', formatTemp(live.max), '')}
+                    ${metric(en ? 'UV index' : 'UV-index', live.uv === null ? '—' : Math.round(live.uv), uvLabel(live.uv))}
                 </div>
-                <div class="heat-detail-info">
-                    <div>
-                        <p class="heat-detail-info-title">${en ? 'Why it heats up here' : 'Waarom het hier warm wordt'}</p>
-                        <p class="heat-detail-info-text">${zone.why[lang]}</p>
-                    </div>
-                    ${coolText ? `<div>
-                        <p class="heat-detail-info-title">${en ? 'Where to cool down' : 'Waar je kunt afkoelen'}</p>
-                        <p class="heat-detail-info-text">${coolText}</p>
-                    </div>` : ''}
-                    <div class="heat-detail-advice ${hotToday ? 'is-hot' : ''}">
-                        <p class="heat-detail-info-title">${en ? 'Today' : 'Vandaag'}</p>
-                        <p class="heat-detail-info-text">${adviceText}</p>
-                    </div>
-                </div>
-                <p class="heat-detail-source">${en ? 'Live weather from Open-Meteo for this area. Heat-island level shows how strongly an area warms up on hot days compared with green areas.' : 'Live weer van Open-Meteo voor dit gebied. Het hitte-eilandniveau laat zien hoe sterk een gebied opwarmt op hete dagen vergeleken met groen.'}</p>
+                ${hoursHtml}` : `<p class="heat-detail-info-text">${heatWeather.status === 'error' ? (en ? 'Live weather is not available right now.' : 'Live weergegevens zijn nu niet beschikbaar.') : (en ? 'Loading live weather…' : 'Live weer laden…')}</p>`}
             `;
 
             return detailCard;
+
         }
 
         function renderHeatSummary() {

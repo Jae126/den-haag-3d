@@ -2020,3 +2020,13 @@ body {
 }
 .heat-detail-advice.is-hot { background: rgba(127, 29, 29, 0.45); border-color: rgba(248, 113, 113, 0.7); }
 .heat-detail-source { margin: 1rem 0 0 0; color: #94A3B8; font-size: 0.75rem; line-height: 1.5; }
+
+/* Heat: next-hours strip */
+.heat-zone-detail-card-inline .heat-zone-detail-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.heat-hours { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.5rem; }
+.heat-hour {
+  display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+  padding: 0.6rem 0.25rem; border-radius: var(--radius-lg); background: rgba(30, 41, 59, 0.6);
+}
+.heat-hour-time { color: #CBD5E1; font-size: 0.8rem; }
+.heat-hour-temp { font-size: 1.05rem; font-weight: 700; }
