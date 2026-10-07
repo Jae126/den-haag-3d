@@ -2063,10 +2063,11 @@ body {
 .green-fact.is-good { border-color: rgba(74, 222, 128, 0.5); color: #BBF7D0; }
 .green-fact.is-bad { border-color: rgba(56, 189, 248, 0.5); color: #BAE6FD; }
 .green-section-title { margin: 1.1rem 0 0.5rem 0; color: #F1F5F9; font-size: 0.9rem; font-weight: 600; }
-.green-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+.green-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); gap: 0.75rem; }
 .green-metric { padding: 0.8rem 1rem; border-radius: var(--radius-lg); background: rgba(30, 41, 59, 0.6); }
 .green-metric-label { margin: 0 0 0.2rem 0; color: #CBD5E1; font-size: 0.8rem; }
-.green-metric-value { margin: 0; color: #F8FAFC; font-size: 1.15rem; font-weight: 700; }
+.green-metric-value { margin: 0; color: #F8FAFC; font-size: 1.15rem; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+.green-metric { min-width: 0; }
 .green-metric-sub { margin: 0.2rem 0 0 0; color: #CBD5E1; font-size: 0.8rem; }
 .green-outlook { margin: 0.6rem 0 0 0; padding: 0.6rem 0.9rem; border-radius: var(--radius-lg); font-size: 0.9rem; }
 .green-outlook.is-good { background: rgba(22, 101, 52, 0.45); color: #BBF7D0; }
@@ -2089,3 +2090,10 @@ body {
 .green-marker:hover .green-marker-pin { transform: rotate(-45deg) scale(1.2); }
 .leaflet-marker-icon.is-active .green-marker-pin { border-color: #FACC15; }
 @media (prefers-reduced-motion: reduce) { .green-marker-pin { transition: none; } }
+
+/* Green map markers: plain tree shapes */
+.green-marker-tree { display: block; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45)); transition: transform 0.2s ease; transform-origin: 50% 100%; }
+.green-marker:hover .green-marker-tree,
+.leaflet-marker-icon.is-active .green-marker-tree { transform: scale(1.35); }
+.leaflet-marker-icon.is-active .green-marker-tree g { stroke: #FACC15; }
+@media (prefers-reduced-motion: reduce) { .green-marker-tree { transition: none; } }

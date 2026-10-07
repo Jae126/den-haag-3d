@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Den Haag in 3D</title>
-    <link rel="stylesheet" href="css/style.css?v=11">
+    <link rel="stylesheet" href="css/style.css?v=12">
     <!-- Free map: Leaflet + OpenStreetMap (no API key needed) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -1385,7 +1385,11 @@
             }
             highlightMapShape(layer, id);
             const container = document.getElementById(`${layer}-map-container`);
-            if (container) container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            // Keep the visitor at the cards: bring the opened detail card into view, not the map
+            setTimeout(() => {
+                const detail = document.querySelector(`#${layer}-detail [class*="detail-card-inline"]`);
+                if (detail) detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 50);
         }
 
 
@@ -2844,6 +2848,20 @@
             };
         }
 
+        // Public transport estimate from Den Haag Centraal, using the stops and lines in transportStops
+        function greenTransit(space) {
+            const loc = MAP_LOCATIONS.green[space.id];
+            if (!loc || typeof buildJourney !== 'function') return null;
+            const journey = buildJourney(GREEN_ORIGIN, loc);
+            if (journey.walkOnly || !journey.complete) return null;
+            const rides = journey.steps.filter(step => step.kind === 'ride');
+            const vehicle = (v) => v === 'train' ? 'Train' : v === 'bus' ? 'Bus' : 'Tram';
+            return {
+                minutes: journey.minutes,
+                lines: rides.map(r => `${vehicle(r.vehicle)} ${r.lines.join('/')}`).join(' + ')
+            };
+        }
+
         function formatGreenDistance(m) {
             return m < 1000 ? `${Math.round(m / 50) * 50} m` : `${(m / 1000).toFixed(1)} km`;
         }
@@ -2914,6 +2932,15 @@
             return type === 'forest' ? forest : park;
         }
 
+        // Map marker: a simple tree silhouette (park) or pine (forest) with a white outline
+        function greenMarkerSvg(type) {
+            const shape = type === 'forest'
+                ? '<path d="M15 2 7 15h4l-5 8h7v8h4v-8h7l-5-8h4Z"/>'
+                : '<path d="M15 2c-3 0-5.4 2.2-5.9 5A5 5 0 0 0 7.5 16.8h5.5V31h4V16.8h5.5A5 5 0 0 0 20.9 7C20.4 4.2 18 2 15 2Z"/>';
+            const fill = type === 'forest' ? '#15803D' : '#22C55E';
+            return `<svg class="green-marker-tree" viewBox="0 0 30 34" width="30" height="34" aria-hidden="true"><g fill="${fill}" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round">${shape}</g></svg>`;
+        }
+
         function greenTypeLabel(type, lang) {
             return type === 'forest' ? (lang === 'en' ? 'Forest' : 'Bos') : (lang === 'en' ? 'Park' : 'Park');
         }
@@ -2939,9 +2966,9 @@
                     selectedCardIndex = index;
                 }
                 const travel = greenTravel(space);
+                const transit = greenTransit(space);
                 const en = lang === 'en';
                 const weather = greenWeather.byId[space.id];
-                const outlook = greenOutlook(weather, en);
 
                 const card = document.createElement('div');
                 card.className = 'green-space-card';
@@ -2968,7 +2995,14 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg>
                             ${travel.bike} min
                         </span>` : ''}
-                        ${outlook ? `<span class="green-fact ${outlook.good ? 'is-good' : 'is-bad'}">${weather ? Math.round(weather.temp) + '°C · ' : ''}${outlook.text}</span>` : ''}
+                        ${transit ? `<span class="green-fact" title="${transit.lines}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="16" height="16" x="4" y="3" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><path d="m8 19-2 3"/><path d="m18 22-2-3"/><path d="M8 15h.01"/><path d="M16 15h.01"/></svg>
+                            ${transit.minutes} min
+                        </span>` : ''}
+                        ${weather ? `<span class="green-fact">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
+                            ${Math.round(weather.temp)}°C
+                        </span>` : ''}
                     </div>
                 `;
                 container.appendChild(card);
@@ -2999,10 +3033,10 @@
             const lang = currentLanguage;
             const en = lang === 'en';
             const travel = greenTravel(space);
+            const transit = greenTransit(space);
             const loc = MAP_LOCATIONS.green[space.id];
             const stop = loc ? nearestStopTo(loc) : null;
             const weather = greenWeather.byId[space.id];
-            const outlook = greenOutlook(weather, en);
 
             const detailCard = document.createElement('div');
             detailCard.className = 'green-space-detail-card green-space-detail-card-inline';
@@ -3029,6 +3063,7 @@
                 <div class="green-metrics">
                     ${travel ? metric(en ? 'Walk' : 'Lopen', `${travel.walk} min`, formatGreenDistance(travel.meters)) : ''}
                     ${travel ? metric(en ? 'Bike' : 'Fiets', `${travel.bike} min`, '') : ''}
+                    ${transit ? metric(en ? 'Public transport' : 'Openbaar vervoer', `${transit.minutes} min`, `${transit.lines} · ${en ? 'incl. walking' : 'incl. lopen'}`) : metric(en ? 'Public transport' : 'Openbaar vervoer', '—', travel && travel.walk <= 30 ? (en ? 'Walking or cycling is quickest' : 'Lopen of fietsen is het snelst') : (en ? 'No direct tram or bus in our data' : 'Geen directe tram of bus in onze gegevens'))}
                     ${stopUseful ? metric(en ? 'Nearest stop' : 'Dichtstbijzijnde halte', stop.stop.name[lang] || stop.stop.name.en, `${(stop.stop.lines || []).join(', ')} · ${formatGreenDistance(stop.distance)}`) : ''}
                 </div>
 
@@ -3039,7 +3074,7 @@
                     ${metric(en ? 'Rain next 3 hours' : 'Regen komende 3 uur', weather.rainChance === null ? '—' : `${weather.rainChance}%`, '')}
                     ${metric(en ? 'Wind' : 'Wind', `${Math.round(weather.wind)} km/h`, '')}
                 </div>
-                ${outlook ? `<p class="green-outlook ${outlook.good ? 'is-good' : 'is-bad'}">${outlook.text}</p>` : ''}` : `<p class="green-card-text">${greenWeather.status === 'error' ? (en ? 'Live weather is not available right now.' : 'Live weer is nu niet beschikbaar.') : (en ? 'Loading live weather…' : 'Live weer laden…')}</p>`}
+` : `<p class="green-card-text">${greenWeather.status === 'error' ? (en ? 'Live weather is not available right now.' : 'Live weer is nu niet beschikbaar.') : (en ? 'Loading live weather…' : 'Live weer laden…')}</p>`}
 
                 <p class="green-section-title">${en ? 'What you can do' : 'Wat je er kunt doen'}</p>
                 <div class="facilities-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
@@ -3644,9 +3679,9 @@
                         const loc = getMapLocation('green', space.id) || DEN_HAAG_CENTER;
                         const icon = L.divIcon({
                             className: 'green-marker',
-                            html: `<div class="green-marker-pin ${space.type === 'forest' ? 'is-forest' : 'is-park'}">${greenTypeIcon(space.type, 26)}</div>`,
-                            iconSize: [42, 50],
-                            iconAnchor: [21, 48]
+                            html: greenMarkerSvg(space.type),
+                            iconSize: [30, 34],
+                            iconAnchor: [15, 33]
                         });
                         const marker = L.marker([loc.lat, loc.lng], { icon, title: space.name, riseOnHover: true }).addTo(map);
                         marker.bindTooltip(space.name, { direction: 'top', offset: [0, -46] });
@@ -3669,11 +3704,11 @@
                         <p style="font-size: 0.75rem; color: var(--text-slate-400); margin-bottom: 0.5rem; font-weight: 500;">Green Spaces</p>
                         <div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.75rem; color: var(--text-slate-300);">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                ${greenTypeIcon('park', 18)}
+                                <span style="display: inline-flex; width: 16px;">${greenMarkerSvg('park').replace('width="30" height="34"', 'width="14" height="16"')}</span>
                                 <span>${greenTypeLabel('park', currentLanguage)}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                ${greenTypeIcon('forest', 18)}
+                                <span style="display: inline-flex; width: 16px;">${greenMarkerSvg('forest').replace('width="30" height="34"', 'width="14" height="16"')}</span>
                                 <span>${greenTypeLabel('forest', currentLanguage)}</span>
                             </div>
                         </div>
